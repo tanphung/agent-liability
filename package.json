@@ -1,0 +1,24 @@
+{
+  "name": "agent-liability",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy:studionet": "tsx scripts/deploy.ts",
+    "verify:studionet": "tsx scripts/verify-deployment.ts",
+    "smoke:studionet": "tsx scripts/smoke-test.ts",
+    "typecheck": "tsc -p tsconfig.scripts.json --noEmit",
+    "lint": "eslint scripts/**/*.ts",
+    "test": "vitest run",
+    "build": "npm --prefix frontend run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.7",
+    "eslint": "^9.18.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0",
+    "vitest": "^2.1.8"
+  }
+}
