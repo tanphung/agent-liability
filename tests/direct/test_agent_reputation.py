@@ -1,6 +1,12 @@
 import json
 
 
+def as_hex(address):
+    if isinstance(address, bytes):
+        return "0x" + address.hex()
+    return str(address)
+
+
 def deploy_reputation(direct_deploy):
     return direct_deploy("contracts/agent_reputation.py")
 
@@ -22,6 +28,24 @@ def test_non_owner_and_second_configuration_rejected(
     contract.set_authorized_contract(direct_bob)
     with direct_vm.expect_revert("already configured"):
         contract.set_authorized_contract(direct_alice)
+
+
+def test_owner_can_transfer_reputation_ownership(
+    direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
+):
+    contract = deploy_reputation(direct_deploy)
+    with direct_vm.prank(direct_alice):
+        with direct_vm.expect_revert("only owner"):
+            contract.transfer_ownership(direct_bob)
+
+    contract.transfer_ownership(direct_alice)
+    config = json.loads(contract.get_config())
+    assert config["owner"].lower() == as_hex(direct_alice).lower()
+
+    with direct_vm.prank(direct_alice):
+        contract.set_authorized_contract(direct_charlie)
+    updated = json.loads(contract.get_config())
+    assert updated["authorized_configured"] is True
 
 
 def test_record_outcome_authorization_duplicate_and_score(

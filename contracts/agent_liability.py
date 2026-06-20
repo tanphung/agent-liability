@@ -342,6 +342,15 @@ class Contract(gl.Contract):
         self.protocol_fees_accrued = u256(accrued - int(amount))
         self._safe_transfer(recipient, amount)
 
+    @gl.public.write
+    def transfer_ownership(self, new_owner: Address) -> None:
+        new_owner = self._to_address(new_owner)
+        if gl.message.sender_address != self.owner:
+            raise gl.vm.UserError("only owner")
+        if self._is_zero_address(new_owner):
+            raise gl.vm.UserError("new owner cannot be zero address")
+        self.owner = new_owner
+
     @gl.public.view
     def get_case_count(self) -> u256:
         return u256(len(self.case_ids))

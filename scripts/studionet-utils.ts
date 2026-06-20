@@ -21,6 +21,9 @@ export type DeploymentArtifact = {
   reputationDeployTxHash?: `0x${string}`;
   mainDeployTxHash?: `0x${string}`;
   authorizationTxHash?: `0x${string}`;
+  reputationOwnerTransferTxHash?: `0x${string}`;
+  mainOwnerTransferTxHash?: `0x${string}`;
+  ownerAddress?: `0x${string}`;
   protocolFeeBps: number;
   createdAt: string;
 };
@@ -74,6 +77,13 @@ export function protocolFeeBps(env: Record<string, string>): number {
   return fee;
 }
 
+export function optionalOwnerAddress(env: Record<string, string>): `0x${string}` | undefined {
+  if (!env.OWNER_ADDRESS) {
+    return undefined;
+  }
+  return assertAddress(env.OWNER_ADDRESS, "OWNER_ADDRESS");
+}
+
 export function assertAddress(value: string | undefined, label: string): `0x${string}` {
   if (!value || !/^0x[a-fA-F0-9]{40}$/.test(value)) {
     throw new Error(`${label} must be a 20-byte 0x address`);
@@ -88,10 +98,11 @@ export function assertFile(path: string): void {
 }
 
 export function runCommand(command: string, args: string[]): string {
-  const result = spawnSync(command, args, {
+  const executable = process.platform === "win32" && command === "genlayer" ? "genlayer.cmd" : command;
+  const result = spawnSync(executable, args, {
     cwd: process.cwd(),
     encoding: "utf8",
-    shell: false
+    shell: process.platform === "win32"
   });
   if (result.error) {
     throw new Error(
@@ -121,8 +132,8 @@ export function parseDeploymentOutput(output: string): {
   address: `0x${string}`;
   txHash?: `0x${string}`;
 } {
-  const address = output.match(/Contract Address:\s*(0x[a-fA-F0-9]{40})/i)?.[1];
-  const txHash = output.match(/Transaction Hash:\s*(0x[a-fA-F0-9]{64})/i)?.[1];
+  const address = output.match(/['"]?Contract Address['"]?:\s*['"]?(0x[a-fA-F0-9]{40})/i)?.[1];
+  const txHash = output.match(/['"]?Transaction Hash['"]?:\s*['"]?(0x[a-fA-F0-9]{64})/i)?.[1];
   if (!address) {
     throw new Error(`Could not parse deployed contract address from CLI output:\n${output}`);
   }
@@ -148,11 +159,19 @@ export function deployContract(contractPath: string, args: string[] = []): {
 }
 
 export function writeContract(address: string, method: string, args: string[] = []): string {
-  return runCommand("genlayer", ["write", address, method, ...args, "--rpc", STUDIONET.rpc]);
+  const cliArgs = ["write", address, method, "--rpc", STUDIONET.rpc];
+  if (args.length > 0) {
+    cliArgs.push("--args", ...args);
+  }
+  return runCommand("genlayer", cliArgs);
 }
 
 export function callContract(address: string, method: string, args: string[] = []): string {
-  return runCommand("genlayer", ["call", address, method, ...args, "--rpc", STUDIONET.rpc]);
+  const cliArgs = ["call", address, method, "--rpc", STUDIONET.rpc];
+  if (args.length > 0) {
+    cliArgs.push("--args", ...args);
+  }
+  return runCommand("genlayer", cliArgs);
 }
 
 export function saveArtifact(path: string, artifact: DeploymentArtifact): void {

@@ -4,6 +4,7 @@ import {
   deployContract,
   explorerLink,
   loadEnv,
+  optionalOwnerAddress,
   protocolFeeBps,
   requireStudionet,
   runCommand,
@@ -14,6 +15,7 @@ import {
 const env = loadEnv();
 requireStudionet(env);
 const feeBps = protocolFeeBps(env);
+const ownerAddress = optionalOwnerAddress(env);
 
 console.log("Deploying AgentLiability to Studionet");
 console.log(`RPC: ${STUDIONET.rpc}`);
@@ -38,6 +40,19 @@ const authHash = authOutput.match(/Transaction Hash:\s*(0x[a-fA-F0-9]{64})/i)?.[
   | `0x${string}`
   | undefined;
 
+let reputationOwnerTransferHash: `0x${string}` | undefined;
+let mainOwnerTransferHash: `0x${string}` | undefined;
+if (ownerAddress) {
+  const repOwnerOutput = writeContract(reputation.address, "transfer_ownership", [ownerAddress]);
+  reputationOwnerTransferHash = repOwnerOutput.match(/Transaction Hash:\s*(0x[a-fA-F0-9]{64})/i)?.[1] as
+    | `0x${string}`
+    | undefined;
+  const mainOwnerOutput = writeContract(main.address, "transfer_ownership", [ownerAddress]);
+  mainOwnerTransferHash = mainOwnerOutput.match(/Transaction Hash:\s*(0x[a-fA-F0-9]{64})/i)?.[1] as
+    | `0x${string}`
+    | undefined;
+}
+
 runCommand("genlayer", ["schema", main.address, "--rpc", STUDIONET.rpc]);
 runCommand("genlayer", ["schema", reputation.address, "--rpc", STUDIONET.rpc]);
 
@@ -52,6 +67,9 @@ const artifact = {
   reputationDeployTxHash: reputation.txHash,
   mainDeployTxHash: main.txHash,
   authorizationTxHash: authHash,
+  reputationOwnerTransferTxHash: reputationOwnerTransferHash,
+  mainOwnerTransferTxHash: mainOwnerTransferHash,
+  ownerAddress,
   protocolFeeBps: feeBps,
   createdAt: new Date().toISOString()
 } as const;

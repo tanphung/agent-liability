@@ -38,6 +38,14 @@ class Contract(gl.Contract):
         self.authorized_configured = True
 
     @gl.public.write
+    def transfer_ownership(self, new_owner: Address) -> None:
+        self._require_owner()
+        new_owner = self._to_address(new_owner)
+        if self._is_zero_address(new_owner):
+            raise gl.vm.UserError("new owner cannot be zero address")
+        self.owner = new_owner
+
+    @gl.public.write
     def record_outcome(
         self,
         case_id: u256,

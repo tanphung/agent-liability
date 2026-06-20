@@ -32,7 +32,14 @@ genlayer deploy --contract contracts\agent_liability.py --rpc https://studio.gen
 Then configure authorization:
 
 ```powershell
-genlayer write <reputation-contract-address> set_authorized_contract <main-contract-address> --rpc https://studio.genlayer.com/api
+genlayer write <reputation-contract-address> set_authorized_contract --rpc https://studio.genlayer.com/api --args <main-contract-address>
+```
+
+If deployment is signed by a temporary account, transfer ownership after authorization:
+
+```powershell
+genlayer write <reputation-contract-address> transfer_ownership --rpc https://studio.genlayer.com/api --args <owner-address>
+genlayer write <main-contract-address> transfer_ownership --rpc https://studio.genlayer.com/api --args <owner-address>
 ```
 
 After deployment:

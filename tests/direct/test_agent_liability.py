@@ -9,6 +9,12 @@ BOND_0 = 10_000
 BOND_1 = 20_000
 
 
+def as_hex(address):
+    if isinstance(address, bytes):
+        return "0x" + address.hex()
+    return str(address)
+
+
 def deploy_main(direct_deploy, direct_charlie):
     return direct_deploy("contracts/agent_liability.py", direct_charlie, 250)
 
@@ -386,6 +392,23 @@ def test_draft_cancellation_and_fee_withdrawal_rules(
             contract.withdraw_protocol_fees(direct_alice, 1)
     with direct_vm.expect_revert("exceeds accrued"):
         contract.withdraw_protocol_fees(direct_alice, 1)
+
+
+def test_owner_can_transfer_main_ownership(
+    direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
+):
+    contract = deploy_main(direct_deploy, direct_charlie)
+    with direct_vm.prank(direct_alice):
+        with direct_vm.expect_revert("only owner"):
+            contract.transfer_ownership(direct_bob)
+
+    contract.transfer_ownership(direct_alice)
+    config = json.loads(contract.get_protocol_config())
+    assert config["owner"].lower() == as_hex(direct_alice).lower()
+
+    with direct_vm.prank(direct_alice):
+        with direct_vm.expect_revert("exceeds accrued"):
+            contract.withdraw_protocol_fees(direct_alice, 1)
 
 
 def test_semantic_consensus_accepts_close_material_decisions(

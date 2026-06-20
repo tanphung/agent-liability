@@ -1,0 +1,17 @@
+{
+  "network": "studionet",
+  "rpc": "https://studio.genlayer.com/api",
+  "chainId": 61999,
+  "storageTestAddress": "0x86d253A01144cfA0d5679115dAb2E446919eb977",
+  "reputationContractAddress": "0xACdb97A894dDBd1aDCD1fA4E4Da01DaaF809c45d",
+  "mainContractAddress": "0xc57900f71994467a9684C5f8Df5b1A2e2B9A58C6",
+  "storageTestTxHash": "0x102cb1e2544d81fefc1ee855d7a5f0975afdce6da3f324d019147f8e3010ba11",
+  "reputationDeployTxHash": "0x9eb1910cffc33f03202c25171007973ec419c65865503900877b50ade1aeef27",
+  "mainDeployTxHash": "0x837684f4dcd880cea18038aa1ecef09e05d3a0dffb3af9b996f8110ec589d744",
+  "authorizationTxHash": "0x3bf38b1ec29203b3aa281ed38e0244a79135226e6315c424786e637e9c0ca021",
+  "reputationOwnerTransferTxHash": "0x3d0980c4a57facd34ef398941e71932466c9bac136106315334e5f39036e5a0a",
+  "mainOwnerTransferTxHash": "0x99601e6db77e419b9ad4ced660bc20b14b5ee7d6bf17f95fadf0f6e192c114a8",
+  "ownerAddress": "0xf8916c192f28b3a6f5e4b731ba85f7c38fab0ea3",
+  "protocolFeeBps": 250,
+  "createdAt": "2026-06-20T15:16:18.394Z"
+}

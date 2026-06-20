@@ -10,6 +10,15 @@ Multi-agent AI workflows fail in messy ways. A coding agent may ship the broken 
 
 AgentLiability is a GenLayer Studionet dApp where a client creates a case, funds GEN escrow, assigns 2 to 5 agents, and requires each agent to post a GEN bond. If a dispute arises, the Intelligent Contract renders public evidence URLs, asks GenLayer validators to adjudicate responsibility, checks semantic agreement, and then deterministically distributes escrow, refunds, slashed bonds, and reputation updates.
 
+## Live Deployment
+
+- App: https://agent-liability.vercel.app
+- Network: GenLayer Studionet
+- Main contract: `0xc57900f71994467a9684C5f8Df5b1A2e2B9A58C6`
+- Reputation contract: `0xACdb97A894dDBd1aDCD1fA4E4Da01DaaF809c45d`
+- Owner: `0xf8916c192f28B3A6f5e4B731ba85f7c38fAb0eA3`
+- Deployment artifact: `artifacts/studionet-deployment.json`
+
 ## Why Solidity-Only Contracts Cannot Implement It
 
 Solidity can enforce arithmetic and state transitions, but it cannot independently render GitHub PRs, CI logs, documentation, deployment reports, or agent deliverables. It also cannot decide whether a downstream agent reasonably should have detected an upstream false assumption. A Solidity-only implementation would require a centralized oracle or trusted human signer for the actual verdict, which is the central thing AgentLiability removes.
