@@ -26,6 +26,8 @@ type GenLayerClient = {
   debugTraceTransaction?: (input: { hash: HexAddress; round?: number }) => Promise<unknown>;
 };
 
+const DEFAULT_READ_ACCOUNT = "0x0000000000000000000000000000000000000000" as HexAddress;
+
 function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: string]: unknown }): boolean {
   if (receipt.txExecutionResultName) {
     return String(receipt.txExecutionResultName) === "FINISHED_WITH_RETURN";
@@ -46,7 +48,8 @@ function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: st
 }
 
 export const readClient = createClient({
-  chain: studionet
+  chain: studionet,
+  account: DEFAULT_READ_ACCOUNT
 }) as unknown as GenLayerClient;
 
 export function createWalletClient(account: HexAddress): GenLayerClient {
