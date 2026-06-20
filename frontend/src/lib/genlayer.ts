@@ -2,6 +2,7 @@ import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { TransactionStatus } from "genlayer-js/types";
 import type { HexAddress, TransactionRecord } from "../types/contracts";
+import { getWalletProvider } from "./walletProvider";
 
 type GenLayerClient = {
   connect?: (network: "studionet") => Promise<unknown>;
@@ -53,13 +54,14 @@ export const readClient = createClient({
 }) as unknown as GenLayerClient;
 
 export function createWalletClient(account: HexAddress): GenLayerClient {
-  if (!window.ethereum) {
+  const provider = getWalletProvider();
+  if (!provider) {
     throw new Error("No browser wallet provider found");
   }
   return createClient({
     chain: studionet,
     account,
-    provider: window.ethereum
+    provider
   }) as unknown as GenLayerClient;
 }
 

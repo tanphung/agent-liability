@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { getWalletProvider } from "../lib/walletProvider";
 import type { HexAddress } from "../types/contracts";
 
 function isAddress(value: unknown): value is HexAddress {
@@ -27,36 +28,39 @@ export function useWallet() {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!window.ethereum) {
+    const provider = getWalletProvider();
+    if (!provider) {
       setError("No wallet provider found");
       return;
     }
-    const accounts = (await window.ethereum.request({ method: "eth_accounts" })) as unknown[];
+    const accounts = (await provider.request({ method: "eth_accounts" })) as unknown[];
     setAccount(isAddress(accounts[0]) ? accounts[0] : null);
-    const rawChainId = await window.ethereum.request({ method: "eth_chainId" });
+    const rawChainId = await provider.request({ method: "eth_chainId" });
     setChainId(normalizeChainId(rawChainId));
   }, []);
 
   const connect = useCallback(async () => {
-    if (!window.ethereum) {
+    const provider = getWalletProvider();
+    if (!provider) {
       setError("No wallet provider found");
       return;
     }
     setError(null);
-    const accounts = (await window.ethereum.request({ method: "eth_requestAccounts" })) as unknown[];
+    const accounts = (await provider.request({ method: "eth_requestAccounts" })) as unknown[];
     setAccount(isAddress(accounts[0]) ? accounts[0] : null);
-    const rawChainId = await window.ethereum.request({ method: "eth_chainId" });
+    const rawChainId = await provider.request({ method: "eth_chainId" });
     setChainId(normalizeChainId(rawChainId));
   }, []);
 
   const switchToStudionet = useCallback(async () => {
-    if (!window.ethereum) {
+    const provider = getWalletProvider();
+    if (!provider) {
       setError("No wallet provider found");
       return;
     }
     setError(null);
     try {
-      await window.ethereum.request({
+      await provider.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: "0xf22f" }]
       });
@@ -69,7 +73,7 @@ export function useWallet() {
         setError(switchError instanceof Error ? switchError.message : String(switchError));
         return;
       }
-      await window.ethereum.request({
+      await provider.request({
         method: "wallet_addEthereumChain",
         params: [
           {
@@ -91,16 +95,17 @@ export function useWallet() {
 
   useEffect(() => {
     void refresh();
-    if (!window.ethereum?.on) {
+    const provider = getWalletProvider();
+    if (!provider?.on) {
       return;
     }
     const handleAccounts = () => void refresh();
     const handleChain = () => void refresh();
-    window.ethereum.on("accountsChanged", handleAccounts);
-    window.ethereum.on("chainChanged", handleChain);
+    provider.on("accountsChanged", handleAccounts);
+    provider.on("chainChanged", handleChain);
     return () => {
-      window.ethereum?.removeListener?.("accountsChanged", handleAccounts);
-      window.ethereum?.removeListener?.("chainChanged", handleChain);
+      provider.removeListener?.("accountsChanged", handleAccounts);
+      provider.removeListener?.("chainChanged", handleChain);
     };
   }, [refresh]);
 
