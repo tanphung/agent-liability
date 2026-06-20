@@ -58,7 +58,8 @@ a {
 .button,
 .case-row,
 .tx-row a,
-.evidence-card {
+.evidence-card,
+.address-config {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -316,6 +317,15 @@ button:focus-visible {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
+}
+
+.address-config {
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.address-config input {
+  width: min(360px, 100%);
 }
 
 .agent-inputs {

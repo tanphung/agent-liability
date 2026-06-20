@@ -16,7 +16,8 @@ import type { TransactionRecord } from "./types/contracts";
 type Tab = "dashboard" | "create" | "case" | "reputation";
 
 export default function App() {
-  const config = useMemo(() => readConfig(), []);
+  const [configVersion, setConfigVersion] = useState(0);
+  const config = useMemo(() => readConfig(), [configVersion]);
   const wallet = useWallet();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [caseId, setCaseId] = useState<number | null>(null);
@@ -46,13 +47,21 @@ export default function App() {
             <span>AgentLiability</span>
           </div>
           <NetworkBadge />
-          <WalletButton account={wallet.account} isStudionet={wallet.isStudionet} onConnect={() => void wallet.connect()} />
+          <WalletButton
+            account={wallet.account}
+            isStudionet={wallet.isStudionet}
+            onConnect={() => void wallet.connect()}
+            onSwitchNetwork={() => void wallet.switchToStudionet()}
+          />
         </header>
 
-        <ContractStatusBanner config={config} />
+        <ContractStatusBanner config={config} onConfigSaved={() => setConfigVersion((value) => value + 1)} />
         {wallet.account && !wallet.isStudionet ? (
-          <section className="status-banner error">Wallet is not on Studionet chain ID 61999.</section>
+          <section className="status-banner error">
+            Wallet is on chain ID {wallet.chainId ?? "unknown"}. Switch to Studionet chain ID 61999.
+          </section>
         ) : null}
+        {wallet.error ? <section className="status-banner error">{wallet.error}</section> : null}
 
         <main className="layout">
           <nav className="sidebar" aria-label="Primary">
