@@ -5,7 +5,6 @@ import type { HexAddress, TransactionRecord } from "../types/contracts";
 import { getWalletProvider } from "./walletProvider";
 
 type GenLayerClient = {
-  connect?: (network: "studionet") => Promise<unknown>;
   readContract: (input: {
     address: HexAddress;
     functionName: string;
@@ -107,7 +106,6 @@ export async function executeWrite(params: {
   const id = `${params.label}-${Date.now()}`;
   const walletClient = createWalletClient(params.account);
   params.onUpdate({ id, label: params.label, phase: "Awaiting wallet signature" });
-  await walletClient.connect?.("studionet");
   const hash = await walletClient.writeContract({
     address: params.contract,
     functionName: params.functionName,
