@@ -1,0 +1,27 @@
+{
+  "evaluation_error": false,
+  "case_outcome": "PARTIAL_SUCCESS",
+  "root_cause_party": "AGENT_0",
+  "client_refund_bps": 6000,
+  "confidence": 86,
+  "evidence_quality": "HIGH",
+  "reason": "The planning agent introduced an unsupported API assumption that propagated downstream.",
+  "agents": [
+    {
+      "slot": 0,
+      "verdict": "PRIMARY_CAUSE",
+      "fault_share_bps": 6500,
+      "payout_bps": 0,
+      "bond_slash_bps": 10000,
+      "reason": "The plan selected an unsupported API version."
+    },
+    {
+      "slot": 1,
+      "verdict": "CONTRIBUTING",
+      "fault_share_bps": 3500,
+      "payout_bps": 4000,
+      "bond_slash_bps": 3000,
+      "reason": "The implementation did not verify the documented API."
+    }
+  ]
+}
