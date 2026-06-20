@@ -44,17 +44,13 @@ function fromLocalStorage(key: string): string | undefined {
 }
 
 function optionalEnv(value: string | undefined, fallback: string): string {
-  return value && value.length > 0 ? value : fallback;
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : fallback;
 }
 
 export function readConfig(): AppConfig {
   const errors: string[] = [];
   const env = import.meta.env;
-  const network = optionalEnv(env.VITE_GENLAYER_NETWORK, STUDIONET.network);
-  const rpc = optionalEnv(env.VITE_GENLAYER_RPC, STUDIONET.rpc);
-  const chainId = Number(optionalEnv(env.VITE_GENLAYER_CHAIN_ID, String(STUDIONET.chainId)));
-  const currency = optionalEnv(env.VITE_GENLAYER_CURRENCY, STUDIONET.currency);
-  const explorerUrl = optionalEnv(env.VITE_EXPLORER_URL, STUDIONET.explorerUrl);
   const mainContractAddress = optionalEnv(
     env.VITE_MAIN_CONTRACT_ADDRESS,
     fromLocalStorage(MAIN_ADDRESS_KEY) ?? ""
@@ -64,21 +60,6 @@ export function readConfig(): AppConfig {
     fromLocalStorage(REPUTATION_ADDRESS_KEY) ?? ""
   );
 
-  if (network !== STUDIONET.network) {
-    errors.push("VITE_GENLAYER_NETWORK must be studionet");
-  }
-  if (rpc !== STUDIONET.rpc) {
-    errors.push("VITE_GENLAYER_RPC must be https://studio.genlayer.com/api");
-  }
-  if (chainId !== STUDIONET.chainId) {
-    errors.push("VITE_GENLAYER_CHAIN_ID must be 61999");
-  }
-  if (currency !== STUDIONET.currency) {
-    errors.push("VITE_GENLAYER_CURRENCY must be GEN");
-  }
-  if (explorerUrl !== STUDIONET.explorerUrl) {
-    errors.push("VITE_EXPLORER_URL must be https://explorer-studio.genlayer.com");
-  }
   if (!isAddress(mainContractAddress)) {
     errors.push("Main contract address is missing or invalid");
   }
