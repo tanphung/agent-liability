@@ -14,6 +14,12 @@ The deprecated `v1` endpoint must not be used because it returns a legacy sessio
 without the `audience`, `issued_at`, and `rotation_id` fields required by the current
 security policy.
 
+## Client Clarity
+
+The client requirement is explicit: API `v2` is mandatory, and `v1` is unacceptable for
+this workflow. Missing `audience`, `issued_at`, or `rotation_id` is a delivery failure, not
+a client ambiguity.
+
 ## Required Deliverables
 
 - Planning report with the chosen API version, assumptions, and integration sequence.
@@ -35,3 +41,16 @@ security policy.
 The planning agent selected the deprecated `v1` endpoint and marked it as acceptable.
 The coding agent followed that plan and shipped an implementation that compiles, but the
 live integration check fails because the required `v2` session fields are missing.
+
+## Adjudication Reading For Demo
+
+This demo is intended to produce a partial-success verdict:
+
+- Root cause party: `AGENT_0`.
+- Planning Agent: primary cause, because it selected deprecated API `v1` despite an
+  explicit `v2` requirement.
+- Coding Agent: contributing, because it followed the flawed plan but did not flag the
+  missing required fields before delivery.
+- Client: not at fault; the API version and required fields were stated clearly.
+- Suggested economics: Planning Agent payout `0` bps, Coding Agent payout about `2000` bps,
+  Client refund about `8000` bps.

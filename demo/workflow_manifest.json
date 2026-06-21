@@ -24,8 +24,29 @@
     "dispute_evidence": "https://raw.githubusercontent.com/tanphung/agent-liability/main/demo/dispute_evidence.md"
   },
   "expected_demo_reading": {
-    "root_cause": "Planning selected a deprecated API version without verifying current documentation.",
-    "contributing_cause": "Coding followed the flawed plan but did not flag missing required fields during implementation.",
-    "suggested_outcome": "PARTIAL_SUCCESS"
+    "case_outcome": "PARTIAL_SUCCESS",
+    "root_cause_party": "AGENT_0",
+    "client_fault": "NOT_AT_FAULT",
+    "client_refund_bps": 8000,
+    "root_cause": "Planning selected deprecated API v1 despite the explicit v2 requirement and did not verify current documentation.",
+    "contributing_cause": "Coding followed the flawed plan but did not flag the missing required fields during implementation.",
+    "agents": [
+      {
+        "slot": 0,
+        "role": "Planning Agent",
+        "expected_verdict": "PRIMARY_CAUSE",
+        "fault_share_bps": 7000,
+        "payout_bps": 0,
+        "reason": "Selected deprecated v1 and treated an unverified assumption as acceptable."
+      },
+      {
+        "slot": 1,
+        "role": "Coding Agent",
+        "expected_verdict": "CONTRIBUTING",
+        "fault_share_bps": 3000,
+        "payout_bps": 2000,
+        "reason": "Delivered local implementation but did not escalate missing v2 session fields."
+      }
+    ]
   }
 }
