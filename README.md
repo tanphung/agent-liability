@@ -8,14 +8,14 @@ Multi-agent AI workflows fail in messy ways. A coding agent may ship the broken 
 
 ## Solution
 
-AgentLiability is a GenLayer Testnet Bradbury dApp where a client creates a case, funds GEN escrow, assigns 2 to 5 agents, and requires each agent to post a GEN bond. If a dispute arises, the Intelligent Contract renders public evidence URLs, asks GenLayer validators to adjudicate responsibility, checks semantic agreement, and then deterministically distributes escrow, refunds, slashed bonds, and reputation updates.
+AgentLiability is a GenLayer Testnet Bradbury dApp where a client creates a case, funds GEN escrow, attaches public evidence for two workflow agents, and receives an on-chain GenLayer adjudication. The Intelligent Contract renders public evidence URLs, asks GenLayer validators to adjudicate responsibility, checks semantic agreement, and then deterministically distributes escrow, records the verdict, and emits reputation updates.
 
 ## Current Bradbury Status
 
 - App: https://agent-liability.vercel.app
 - Network: GenLayer Testnet Bradbury
-- Main contract: `0x164EB8dD1B4caDB4d6dBf1F2acc0cf6F5a4A9907`
-- Reputation contract: `0x69BA8164d5684008af5c03BB53bbE8df9A483F38`
+- Main contract: `0x4dDF0e92f997Ec31ef0BD49926Be04a8Ef1cF38C`
+- Reputation contract: `0x82ee20D3eE9f35C3E092Ac5C3711A7B46593fc5A`
 - Owner: `0xf8916c192f28B3A6f5e4B731ba85f7c38fAb0eA3`
 - Deployment artifact: `artifacts/bradbury-deployment.json`
 
@@ -76,18 +76,15 @@ Storage Sanity Contract: `contracts/storage_test.py`
 
 ## User Flow
 
-1. Client creates a case and locks GEN escrow.
-2. Client adds 2 to 5 agent assignments.
-3. Client activates the case.
-4. Agents accept and pay exact required bonds.
-5. Agents submit public evidence URLs and claim summaries.
-6. Client or agent raises a dispute.
-7. The main contract renders evidence from the web.
-8. Leader and validators independently adjudicate causal responsibility.
-9. Contract checks semantic agreement, not just JSON shape.
-10. Contract stores verdict and executes deterministic settlement.
-11. Reputation update messages are emitted.
-12. Frontend tracks main and child transaction states.
+1. Client clicks `Fill Demo Case` or enters case details and locks GEN escrow.
+2. Client signs one `create_and_adjudicate_case` transaction.
+3. The contract creates the case, attaches two agent assignments and evidence URLs, records the dispute, and runs adjudication.
+4. The main contract renders evidence from the web.
+5. Leader and validators independently adjudicate causal responsibility.
+6. Contract checks semantic agreement, not just JSON shape.
+7. Contract stores the on-chain verdict and executes deterministic settlement.
+8. Reputation update messages are emitted.
+9. Frontend tracks transaction status and reads final case state from chain.
 
 ## Case State Machine
 
@@ -96,6 +93,7 @@ stateDiagram-v2
   [*] --> DRAFT
   DRAFT --> FUNDING: activate_case
   DRAFT --> CANCELLED: cancel_draft
+  DRAFT --> DECIDED: create_and_adjudicate_case
   FUNDING --> ACTIVE: all agents accept
   ACTIVE --> DISPUTED: raise_dispute
   DISPUTED --> DECIDED: adjudicate_case
@@ -328,16 +326,16 @@ OWNER_ADDRESS=0xf8916c192f28b3a6f5e4b731ba85f7c38fab0ea3
 Frontend `.env`:
 
 ```env
-VITE_MAIN_CONTRACT_ADDRESS=
-VITE_REPUTATION_CONTRACT_ADDRESS=
+VITE_MAIN_CONTRACT_ADDRESS=0x4dDF0e92f997Ec31ef0BD49926Be04a8Ef1cF38C
+VITE_REPUTATION_CONTRACT_ADDRESS=0x82ee20D3eE9f35C3E092Ac5C3711A7B46593fc5A
 ```
 
 ## Deployment Addresses
 
 ```text
 Storage Test Contract: `0x93231fF5b1B6449D4e69dF7483D851B712723DB8`
-Main Contract: `0x164EB8dD1B4caDB4d6dBf1F2acc0cf6F5a4A9907`
-Reputation Contract: `0x69BA8164d5684008af5c03BB53bbE8df9A483F38`
+Main Contract: `0x4dDF0e92f997Ec31ef0BD49926Be04a8Ef1cF38C`
+Reputation Contract: `0x82ee20D3eE9f35C3E092Ac5C3711A7B46593fc5A`
 ```
 
 ## Demo Video
@@ -350,14 +348,12 @@ Demo Video: NOT RECORDED
 
 - Testnet Bradbury deploys and writes require funded Bradbury accounts.
 - Testnet Bradbury integration test is gated behind `RUN_BRADBURY_INTEGRATION=1`.
-- Frontend appeal UI is disabled because the installed SDK path does not expose a verified appeal helper for this dApp.
 - `genvm-lint check` validate step may fail on SDK artifact download for the required `v0.2.16` Studio header.
 - Vite reports a large JS chunk because `genlayer-js` and wallet dependencies are bundled.
 
 ## Roadmap
 
 - Deploy to Testnet Bradbury through the CLI with a funded account.
-- Record a complete demo with public evidence URLs.
 - Add contract schema-driven frontend call generation.
 - Add child transaction polling per payout and reputation message.
 - Add code splitting for the frontend SDK bundle.

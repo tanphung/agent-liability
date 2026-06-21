@@ -39,7 +39,9 @@ export const DEMO_AGENTS: DemoAgent[] = [
 export const DEMO_EVIDENCE = {
   planningDeliverableUrl: `${RAW_DEMO_BASE}/planning_deliverable.md`,
   codingDeliverableUrl: `${RAW_DEMO_BASE}/coding_deliverable.md`,
-  disputeEvidenceUrl: `${RAW_DEMO_BASE}/dispute_evidence.md`
+  disputeEvidenceUrl: `${RAW_DEMO_BASE}/dispute_evidence.md`,
+  disputeReason:
+    "The delivered authentication workflow failed the required API version and session field acceptance criteria."
 };
 
 export function getDemoAgent(slot: number): DemoAgent {

@@ -195,6 +195,65 @@ class Contract(gl.Contract):
         self.agent_reason[key] = ""
         self.case_agent_count[case_id] = u256(count + 1)
 
+    @gl.public.write.payable
+    def create_and_adjudicate_case(
+        self,
+        title: str,
+        spec_url: str,
+        manifest_url: str,
+        acceptance_criteria: str,
+        deadline: u256,
+        agent0: Address,
+        agent0_role: str,
+        agent0_scope_url: str,
+        agent0_allocation_bps: u256,
+        agent0_deliverable_url: str,
+        agent0_claim_summary: str,
+        agent1: Address,
+        agent1_role: str,
+        agent1_scope_url: str,
+        agent1_allocation_bps: u256,
+        agent1_deliverable_url: str,
+        agent1_claim_summary: str,
+        dispute_reason: str,
+        dispute_evidence_url: str,
+    ) -> u256:
+        case_id = self.create_case(
+            title, spec_url, manifest_url, acceptance_criteria, deadline
+        )
+        self.add_agent(
+            case_id,
+            agent0,
+            agent0_role,
+            agent0_scope_url,
+            agent0_allocation_bps,
+            u256(0),
+        )
+        self.add_agent(
+            case_id,
+            agent1,
+            agent1_role,
+            agent1_scope_url,
+            agent1_allocation_bps,
+            u256(0),
+        )
+        if int(agent0_allocation_bps) + int(agent1_allocation_bps) != MAX_BPS:
+            raise gl.vm.UserError("agent allocation must equal 10000 bps")
+
+        self._auto_accept_and_submit(
+            case_id, u256(0), agent0_deliverable_url, agent0_claim_summary
+        )
+        self._auto_accept_and_submit(
+            case_id, u256(1), agent1_deliverable_url, agent1_claim_summary
+        )
+        self._require_text(dispute_reason, "dispute reason", MAX_DISPUTE_REASON_CHARS)
+        self._require_url(dispute_evidence_url, "dispute evidence URL")
+        self.case_dispute_reason[case_id] = dispute_reason
+        self.case_dispute_evidence_url[case_id] = dispute_evidence_url
+        self.case_status[case_id] = "DISPUTED"
+        self._adjudicate_case_internal(case_id)
+        return case_id
+
     @gl.public.write
     def activate_case(self, case_id: u256) -> None:
         self._require_case(case_id)
@@ -280,6 +339,9 @@ class Contract(gl.Contract):
             raise gl.vm.UserError("case already settled")
         if not self._caller_can_participate(case_id):
             raise gl.vm.UserError("caller cannot adjudicate this case")
+        self._adjudicate_case_internal(case_id)
+
+    def _adjudicate_case_internal(self, case_id: u256) -> None:
         status = self.case_status.get(case_id, "")
         now = self._now()
         deadline_passed = now >= int(self.case_deadline.get(case_id, u256(0)))
@@ -314,6 +376,28 @@ class Contract(gl.Contract):
             raise gl.vm.UserError(f"{code}: {detail}")
 
         self._settle_case(case_id, decision, decision_json)
+
+    def _auto_accept_and_submit(
+        self,
+        case_id: u256,
+        slot: u256,
+        deliverable_url: str,
+        claim_summary: str,
+    ) -> None:
+        key = self._agent_key(case_id, slot)
+        self._require_url(deliverable_url, "deliverable URL")
+        self._require_text(claim_summary, "claim summary", MAX_CLAIM_CHARS)
+        self.agent_joined[key] = True
+        self.agent_bond_paid[key] = u256(0)
+        self.agent_deliverable_url[key] = deliverable_url
+        self.agent_claim_summary[key] = claim_summary
+        self.agent_submitted[key] = True
+        self.case_joined_count[case_id] = u256(
+            int(self.case_joined_count.get(case_id, u256(0))) + 1
+        )
+        self.case_submitted_count[case_id] = u256(
+            int(self.case_submitted_count.get(case_id, u256(0))) + 1
+        )
 
     @gl.public.write
     def cancel_draft(self, case_id: u256) -> None:

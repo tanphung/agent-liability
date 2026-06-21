@@ -3,14 +3,15 @@
   "rpc": "https://rpc-bradbury.genlayer.com",
   "chainId": 4221,
   "storageTestAddress": "0x93231fF5b1B6449D4e69dF7483D851B712723DB8",
-  "reputationContractAddress": "0x69BA8164d5684008af5c03BB53bbE8df9A483F38",
-  "mainContractAddress": "0x164EB8dD1B4caDB4d6dBf1F2acc0cf6F5a4A9907",
-  "reputationDeployTxHash": "0xeded583d6cf4b98e00e57e1eeda4d9bab99fb0116748d9667de96f8bf82eee9b",
-  "mainDeployTxHash": "0x8d6a12a18d18146920cd0a1af2b1363f70bc3a11642f93be42d0084f7b27cc95",
-  "authorizationTxHash": "0xe71f1f910c76e71a03ae521f4806a427a19b9db98f6c2f3fb1cdd73938c5582a",
-  "reputationOwnerTransferTxHash": "0x8e03d0a09c045eb3875d3cbbf9bb9d2c76cfefbf57fc0f581b3fe2761858e306",
-  "mainOwnerTransferTxHash": "0x44e2ff562a35db0a07310cfdc1f99946e0dd02d088cb236bb8e55cb28bbe3947",
+  "reputationContractAddress": "0x82ee20D3eE9f35C3E092Ac5C3711A7B46593fc5A",
+  "mainContractAddress": "0x4dDF0e92f997Ec31ef0BD49926Be04a8Ef1cF38C",
+  "storageTestTxHash": "0xd6358b113046a81e908c80ea9f7712651e821024833d81d51ad98c53bea49451",
+  "reputationDeployTxHash": "0xd62e9029b7e90f6ef178cfa3a8ad47d73edb1e43e4434d134d4202ebd5eee6f3",
+  "mainDeployTxHash": "0x8d8d390c0df12d54794d6559b6d211e40ee65784b22252e58b85f3cf5fd123ed",
+  "authorizationTxHash": "0x148d40e92f1a9d8c6c150635d5f6f763967a68cf5952be24a1ab2165cb9bda46",
+  "reputationOwnerTransferTxHash": "0x5f3898efbb01d64cd1be19d7df4746b6c1cf64a5ed2b70d7cd206c8ed6a56572",
+  "mainOwnerTransferTxHash": "0x5728c29412e94c17931bf6d2862a05fb2207e1d3f12d2d0932683bcde3b5905b",
   "ownerAddress": "0xf8916c192f28B3A6f5e4B731ba85f7c38fAb0eA3",
   "protocolFeeBps": 250,
-  "createdAt": "2026-06-21T09:32:09.0121071+07:00"
+  "createdAt": "2026-06-21T11:05:00+07:00"
 }

@@ -276,6 +276,49 @@ def test_adjudication_happy_path_and_accounting(
         contract.adjudicate_case(case_id)
 
 
+def test_create_and_adjudicate_single_transaction(
+    direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
+):
+    contract = deploy_main(direct_deploy, direct_charlie)
+    mock_sources(direct_vm)
+    direct_vm.mock_llm("AgentLiability", valid_decision())
+    swallow_child_messages(direct_vm)
+    direct_vm.value = ESCROW
+    case_id = contract.create_and_adjudicate_case(
+        "Authentication module",
+        "https://example.com/spec",
+        "https://example.com/manifest",
+        "Build auth against the public API version named in the spec.",
+        DEADLINE,
+        direct_alice,
+        "Planning Agent",
+        "https://example.com/scope-planning",
+        6_000,
+        "https://example.com/planning-report",
+        "Selected API v1 after reading stale docs.",
+        direct_bob,
+        "Coding Agent",
+        "https://example.com/scope-coding",
+        4_000,
+        "https://example.com/coding-pr",
+        "Implemented the plan but integration failed.",
+        "integration failed",
+        "https://example.com/dispute",
+    )
+    direct_vm.value = 0
+
+    summary = json.loads(contract.get_case_summary(case_id))
+    agents = json.loads(contract.get_case_agents(case_id))
+    decision = json.loads(contract.get_case_decision(case_id))
+    assert summary["status"] == "DECIDED"
+    assert summary["settled"] is True
+    assert summary["joined_count"] == 2
+    assert summary["submitted_count"] == 2
+    assert agents[0]["joined"] is True
+    assert agents[1]["submitted"] is True
+    assert decision["case_outcome"] == "PARTIAL_SUCCESS"
+
+
 def test_critical_source_unavailable_prevents_settlement(
     direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
 ):

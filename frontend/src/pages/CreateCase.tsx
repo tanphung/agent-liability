@@ -1,7 +1,7 @@
-import { Plus, Send, Wand2 } from "lucide-react";
+import { Send, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { executeWrite, readScalar } from "../lib/genlayer";
-import { DEMO_AGENTS, DEMO_CASE, getDemoDeadlineInput } from "../lib/demoData";
+import { DEMO_AGENTS, DEMO_CASE, DEMO_EVIDENCE, getDemoDeadlineInput } from "../lib/demoData";
 import type { HexAddress, TransactionRecord } from "../types/contracts";
 import { parseGenToWei, percentToBps } from "../utils/format";
 
@@ -43,6 +43,7 @@ export function CreateCase({
   const [busy, setBusy] = useState(false);
 
   const disabled = !account || !mainContract || busy;
+  const canSubmit = !disabled && agents.length >= 2;
 
   function fillDemoCase() {
     setTitle(DEMO_CASE.title);
@@ -63,41 +64,37 @@ export function CreateCase({
     try {
       const beforeCount = Number(await readScalar<bigint | number>(mainContract, "get_case_count"));
       const deadlineSeconds = Math.floor(new Date(deadline).getTime() / 1000);
+      const [agent0, agent1] = agents;
       await executeWrite({
         account,
         contract: mainContract,
-        functionName: "create_case",
-        args: [title, specUrl, manifestUrl, criteria, deadlineSeconds],
+        functionName: "create_and_adjudicate_case",
+        args: [
+          title,
+          specUrl,
+          manifestUrl,
+          criteria,
+          deadlineSeconds,
+          agent0.wallet,
+          agent0.role,
+          agent0.scopeUrl,
+          percentToBps(agent0.allocationPercent),
+          DEMO_EVIDENCE.planningDeliverableUrl,
+          "Selected API v1 after reading stale docs.",
+          agent1.wallet,
+          agent1.role,
+          agent1.scopeUrl,
+          percentToBps(agent1.allocationPercent),
+          DEMO_EVIDENCE.codingDeliverableUrl,
+          "Implemented the plan but integration failed.",
+          DEMO_EVIDENCE.disputeReason,
+          DEMO_EVIDENCE.disputeEvidenceUrl
+        ],
         value: parseGenToWei(escrowGen),
-        label: "Create case",
+        label: "Create case and adjudicate",
         onUpdate: onTx
       });
       const caseId = beforeCount + 1;
-      for (const [index, agent] of agents.entries()) {
-        await executeWrite({
-          account,
-          contract: mainContract,
-          functionName: "add_agent",
-          args: [
-            caseId,
-            agent.wallet,
-            agent.role,
-            agent.scopeUrl,
-            percentToBps(agent.allocationPercent),
-            parseGenToWei(agent.bondGen)
-          ],
-          label: `Add agent ${index}`,
-          onUpdate: onTx
-        });
-      }
-      await executeWrite({
-        account,
-        contract: mainContract,
-        functionName: "activate_case",
-        args: [caseId],
-        label: "Activate case",
-        onUpdate: onTx
-      });
       onCreated(caseId);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -143,7 +140,7 @@ export function CreateCase({
         </label>
       </div>
       <div className="agent-inputs">
-        {agents.map((agent, index) => (
+        {agents.slice(0, 2).map((agent, index) => (
           <fieldset key={index}>
             <legend>Agent {index}</legend>
             <input
@@ -184,31 +181,13 @@ export function CreateCase({
                 )
               }
             />
-            <input
-              placeholder="Bond GEN"
-              value={agent.bondGen}
-              onChange={(event) =>
-                setAgents((items) =>
-                  items.map((item, idx) => (idx === index ? { ...item, bondGen: event.target.value } : item))
-                )
-              }
-            />
           </fieldset>
         ))}
       </div>
       <div className="button-row">
-        <button
-          className="button secondary"
-          disabled={agents.length >= 5}
-          onClick={() => setAgents((items) => [...items, emptyAgent()])}
-          type="button"
-        >
-          <Plus size={18} />
-          Add Agent
-        </button>
-        <button className="button primary" disabled={disabled} onClick={() => void submit()} type="button">
+        <button className="button primary" disabled={!canSubmit} onClick={() => void submit()} type="button">
           <Send size={18} />
-          Create
+          Create & Adjudicate
         </button>
       </div>
     </section>

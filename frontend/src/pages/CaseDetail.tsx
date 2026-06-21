@@ -1,4 +1,4 @@
-import { AlertOctagon, Gavel, Plus, Trash2, Upload } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AgentResponsibilityCard } from "../components/AgentResponsibilityCard";
 import { CaseStatusBadge } from "../components/CaseStatusBadge";
@@ -8,27 +8,8 @@ import { LoadingSkeleton } from "../components/LoadingSkeleton";
 import { PayoutBreakdown } from "../components/PayoutBreakdown";
 import { executeWrite } from "../lib/genlayer";
 import { readCaseBundle } from "../hooks/useCases";
-import { getDemoAgent } from "../lib/demoData";
 import type { AgentSummary, CaseSummary, Decision, HexAddress, TransactionRecord } from "../types/contracts";
-import { parseGenToWei, percentToBps, shorten, weiToGen } from "../utils/format";
-
-type DraftAgentInput = {
-  wallet: string;
-  role: string;
-  scopeUrl: string;
-  allocationPercent: string;
-  bondGen: string;
-};
-
-const emptyDraftAgent = (): DraftAgentInput => ({
-  wallet: "",
-  role: "",
-  scopeUrl: "",
-  allocationPercent: "",
-  bondGen: "0"
-});
-
-const MIN_CONFIGURED_AGENTS = 2;
+import { shorten, weiToGen } from "../utils/format";
 
 export function CaseDetail({
   caseId,
@@ -44,11 +25,6 @@ export function CaseDetail({
   const [summary, setSummary] = useState<CaseSummary | null>(null);
   const [agents, setAgents] = useState<AgentSummary[]>([]);
   const [decision, setDecision] = useState<Decision | null>(null);
-  const [deliverableUrl, setDeliverableUrl] = useState("");
-  const [claimSummary, setClaimSummary] = useState("");
-  const [disputeReason, setDisputeReason] = useState("");
-  const [disputeUrl, setDisputeUrl] = useState("");
-  const [draftAgent, setDraftAgent] = useState<DraftAgentInput>(emptyDraftAgent());
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -86,37 +62,6 @@ export function CaseDetail({
     }
   }
 
-  async function addDraftAgent() {
-    if (!summary) {
-      return;
-    }
-    await write(
-      "add_agent",
-      [
-        summary.case_id,
-        draftAgent.wallet,
-        draftAgent.role,
-        draftAgent.scopeUrl,
-        percentToBps(draftAgent.allocationPercent),
-        parseGenToWei(draftAgent.bondGen)
-      ],
-      `Add agent ${summary.agent_count}`
-    );
-    setDraftAgent(emptyDraftAgent());
-  }
-
-  function fillDemoAgent() {
-    const slot = summary?.agent_count ?? 0;
-    const agent = getDemoAgent(slot);
-    setDraftAgent({
-      wallet: agent.wallet,
-      role: agent.role,
-      scopeUrl: agent.scopeUrl,
-      allocationPercent: agent.allocationPercent,
-      bondGen: agent.bondGen
-    });
-  }
-
   async function deleteDraftCase() {
     if (!summary) {
       return;
@@ -148,15 +93,8 @@ export function CaseDetail({
     return <section className="panel">{error ?? "Case unavailable"}</section>;
   }
 
-  const myAgent = account ? agents.find((agent) => agent.agent.toLowerCase() === account.toLowerCase()) : undefined;
-  const canAdjudicate = account && (summary.client.toLowerCase() === account.toLowerCase() || myAgent);
   const isClient = account ? summary.client.toLowerCase() === account.toLowerCase() : false;
-  const isSetupCase = summary.status === "DRAFT";
-  const canEditSetup = isClient && isSetupCase;
-  const canPayBond = Boolean(myAgent && summary.status === "FUNDING");
-  const canSubmitEvidence = Boolean(myAgent && (summary.status === "ACTIVE" || summary.status === "DISPUTED"));
-  const canManageDispute = Boolean(canAdjudicate && (summary.status === "ACTIVE" || summary.status === "DISPUTED"));
-  const showAgentActions = canPayBond || canSubmitEvidence || canManageDispute;
+  const canDeleteCreatedCase = isClient && summary.status === "DRAFT";
 
   return (
     <section className="page-grid">
@@ -191,88 +129,23 @@ export function CaseDetail({
         ))}
       </section>
 
-      {isSetupCase ? (
+      {summary.status === "DRAFT" ? (
         <section className="panel form-panel">
-          <h2>Case Setup</h2>
-          {canEditSetup && summary.agent_count < MIN_CONFIGURED_AGENTS ? (
-            <>
-              <label>
-                Agent Wallet
-                <input
-                  value={draftAgent.wallet}
-                  onChange={(event) => setDraftAgent((value) => ({ ...value, wallet: event.target.value }))}
-                />
-              </label>
-              <label>
-                Role
-                <input
-                  value={draftAgent.role}
-                  onChange={(event) => setDraftAgent((value) => ({ ...value, role: event.target.value }))}
-                />
-              </label>
-              <label>
-                Scope URL
-                <input
-                  value={draftAgent.scopeUrl}
-                  onChange={(event) => setDraftAgent((value) => ({ ...value, scopeUrl: event.target.value }))}
-                />
-              </label>
-              <div className="form-grid">
-                <label>
-                  Allocation %
-                  <input
-                    value={draftAgent.allocationPercent}
-                    onChange={(event) =>
-                      setDraftAgent((value) => ({ ...value, allocationPercent: event.target.value }))
-                    }
-                  />
-                </label>
-                <label>
-                  Bond GEN
-                  <input
-                    value={draftAgent.bondGen}
-                    onChange={(event) => setDraftAgent((value) => ({ ...value, bondGen: event.target.value }))}
-                  />
-                </label>
-              </div>
-              <div className="button-row">
-                <button className="button secondary" onClick={fillDemoAgent} type="button">
-                  <Plus size={18} />
-                  Fill Demo Agent
-                </button>
-                <button className="button primary" onClick={() => void addDraftAgent()} type="button">
-                  <Plus size={18} />
-                  Add Agent
-                </button>
-              </div>
-            </>
-          ) : null}
+          <h2>Case Management</h2>
           <div className="button-row">
             <button
               className="button danger"
+              disabled={!canDeleteCreatedCase}
               onClick={() => void deleteDraftCase()}
-              title={canEditSetup ? "Delete case" : `Only ${shorten(summary.client)} can delete this case`}
+              title={canDeleteCreatedCase ? "Delete case" : `Only ${shorten(summary.client)} can delete this case`}
               type="button"
             >
               <Trash2 size={18} />
               Delete Case
             </button>
-            <button
-              className="button primary"
-              disabled={!canEditSetup || summary.agent_count < 2}
-              onClick={() => void write("activate_case", [summary.case_id], "Activate case")}
-              title={canEditSetup ? "Activate case" : "Connect the client wallet to activate this case"}
-              type="button"
-            >
-              <Upload size={18} />
-              Activate Case
-            </button>
           </div>
-          {canEditSetup && summary.agent_count >= MIN_CONFIGURED_AGENTS ? (
-            <p className="helper-text">Required agents are configured. Activate the case to continue.</p>
-          ) : null}
-          {!canEditSetup ? (
-            <p className="helper-text">Only the client wallet {shorten(summary.client)} can delete or activate this case.</p>
+          {!canDeleteCreatedCase ? (
+            <p className="helper-text">Only the client wallet {shorten(summary.client)} can delete this case.</p>
           ) : null}
         </section>
       ) : null}
@@ -287,82 +160,6 @@ export function CaseDetail({
         </>
       ) : null}
 
-      {showAgentActions ? (
-        <section className="panel form-panel">
-          <h2>Agent Actions</h2>
-          {myAgent && canPayBond ? (
-            <button
-              className="button primary"
-              onClick={() =>
-                void write(
-                  "accept_assignment",
-                  [summary.case_id],
-                  "Accept assignment",
-                  BigInt(myAgent.required_bond)
-                )
-              }
-              type="button"
-            >
-              <Upload size={18} />
-              Pay Bond
-            </button>
-          ) : null}
-          {canSubmitEvidence ? (
-            <>
-              <label>
-                Deliverable URL
-                <input value={deliverableUrl} onChange={(event) => setDeliverableUrl(event.target.value)} />
-              </label>
-              <label>
-                Claim Summary
-                <textarea value={claimSummary} onChange={(event) => setClaimSummary(event.target.value)} />
-              </label>
-              <button
-                className="button primary"
-                onClick={() =>
-                  void write("submit_evidence", [summary.case_id, deliverableUrl, claimSummary], "Submit evidence")
-                }
-                type="button"
-              >
-                <Upload size={18} />
-                Submit Evidence
-              </button>
-            </>
-          ) : null}
-          {canManageDispute ? (
-            <>
-              <label>
-                Dispute Reason
-                <textarea value={disputeReason} onChange={(event) => setDisputeReason(event.target.value)} />
-              </label>
-              <label>
-                Dispute Evidence URL
-                <input value={disputeUrl} onChange={(event) => setDisputeUrl(event.target.value)} />
-              </label>
-              <div className="button-row">
-                <button
-                  className="button secondary"
-                  onClick={() =>
-                    void write("raise_dispute", [summary.case_id, disputeReason, disputeUrl], "Raise dispute")
-                  }
-                  type="button"
-                >
-                  <AlertOctagon size={18} />
-                  Dispute
-                </button>
-                <button
-                  className="button primary"
-                  onClick={() => void write("adjudicate_case", [summary.case_id], "Adjudicate")}
-                  type="button"
-                >
-                  <Gavel size={18} />
-                  Adjudicate
-                </button>
-              </div>
-            </>
-          ) : null}
-        </section>
-      ) : null}
     </section>
   );
 }
