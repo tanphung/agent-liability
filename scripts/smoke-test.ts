@@ -1,20 +1,20 @@
 import {
-  STUDIONET,
+  BRADBURY,
   loadArtifact,
   loadEnv,
-  requireStudionet,
+  requireBradbury,
   writeContract,
   callContract
-} from "./studionet-utils.js";
+} from "./bradbury-utils.js";
 
 const env = loadEnv();
-requireStudionet(env);
+requireBradbury(env);
 const artifact = loadArtifact();
 
 const deadline = String(Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60);
 
-console.log("Running Studionet smoke test without triggering adjudication");
-console.log(`RPC: ${STUDIONET.rpc}`);
+console.log("Running Testnet Bradbury smoke test without triggering adjudication");
+console.log(`RPC: ${BRADBURY.rpc}`);
 
 const createOutput = writeContract(artifact.mainContractAddress, "create_case", [
   "Smoke auth workflow",

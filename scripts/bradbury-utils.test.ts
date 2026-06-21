@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { assertAddress, requireStudionet } from "./studionet-utils.js";
+import { assertAddress, requireBradbury } from "./bradbury-utils.js";
 
-describe("Studionet tooling guards", () => {
+describe("Testnet Bradbury tooling guards", () => {
   it("accepts only valid 0x addresses", () => {
     expect(assertAddress("0x0000000000000000000000000000000000000001", "addr")).toBe(
       "0x0000000000000000000000000000000000000001"
@@ -9,13 +9,13 @@ describe("Studionet tooling guards", () => {
     expect(() => assertAddress("0x123", "addr")).toThrow(/20-byte/);
   });
 
-  it("rejects non-Studionet config", () => {
+  it("rejects non-Bradbury config", () => {
     expect(() =>
-      requireStudionet({
+      requireBradbury({
         GENLAYER_NETWORK: "localnet",
-        GENLAYER_RPC: "https://studio.genlayer.com/api",
-        GENLAYER_CHAIN_ID: "61999"
+        GENLAYER_RPC: "https://rpc-bradbury.genlayer.com",
+        GENLAYER_CHAIN_ID: "4221"
       })
-    ).toThrow(/Only Studionet/);
+    ).toThrow(/Only Testnet Bradbury/);
   });
 });

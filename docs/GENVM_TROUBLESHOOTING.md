@@ -1,4 +1,4 @@
-# Studio Deployment Troubleshooting
+# GenVM Troubleshooting
 
 ## Error: `Contract Queues not found`
 
@@ -57,17 +57,17 @@ Click the transaction and inspect the execution result. Finalized does not guara
 
 ## Deployment Worked Before But Fails Now
 
-1. Reset Storage.
-2. Hard refresh.
+1. Confirm `genlayer network info` reports `testnet-bradbury`.
+2. Confirm the active account has Testnet Bradbury GEN.
 3. Deploy `storage_test.py`.
 4. Inspect result.
-5. Deploy main contracts only after sanity contract succeeds.
+5. Deploy main contracts only after the sanity contract succeeds.
 
 ## Frontend Cannot Find Contract
 
 Check:
 
-- Studionet reset
+- Testnet Bradbury reset
 - incorrect address
 - missing `.env`
 - wrong network
@@ -76,10 +76,13 @@ Check:
 
 ## Wallet on Wrong Chain
 
-The frontend calls:
+The frontend calls the wallet provider with:
 
 ```typescript
-await client.connect("studionet");
+await provider.request({
+  method: "wallet_switchEthereumChain",
+  params: [{ chainId: "0x107d" }]
+});
 ```
 
-Verify chain ID `61999`.
+Verify chain ID `4221`.

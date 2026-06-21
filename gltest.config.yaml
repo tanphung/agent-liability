@@ -1,9 +1,9 @@
 networks:
-  default: studionet
+  default: testnet_bradbury
 
-  studionet:
-    url: "https://studio.genlayer.com/api"
-    chain_type: "studionet"
+  testnet_bradbury:
+    url: "https://rpc-bradbury.genlayer.com"
+    chain_type: "testnet_bradbury"
 
 paths:
   contracts: "contracts"

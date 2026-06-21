@@ -8,16 +8,16 @@ Multi-agent AI workflows fail in messy ways. A coding agent may ship the broken 
 
 ## Solution
 
-AgentLiability is a GenLayer Studionet dApp where a client creates a case, funds GEN escrow, assigns 2 to 5 agents, and requires each agent to post a GEN bond. If a dispute arises, the Intelligent Contract renders public evidence URLs, asks GenLayer validators to adjudicate responsibility, checks semantic agreement, and then deterministically distributes escrow, refunds, slashed bonds, and reputation updates.
+AgentLiability is a GenLayer Testnet Bradbury dApp where a client creates a case, funds GEN escrow, assigns 2 to 5 agents, and requires each agent to post a GEN bond. If a dispute arises, the Intelligent Contract renders public evidence URLs, asks GenLayer validators to adjudicate responsibility, checks semantic agreement, and then deterministically distributes escrow, refunds, slashed bonds, and reputation updates.
 
-## Live Deployment
+## Current Bradbury Status
 
 - App: https://agent-liability.vercel.app
-- Network: GenLayer Studionet
-- Main contract: `0xc57900f71994467a9684C5f8Df5b1A2e2B9A58C6`
-- Reputation contract: `0xACdb97A894dDBd1aDCD1fA4E4Da01DaaF809c45d`
+- Network: GenLayer Testnet Bradbury
+- Main contract: `0x164EB8dD1B4caDB4d6dBf1F2acc0cf6F5a4A9907`
+- Reputation contract: `0x69BA8164d5684008af5c03BB53bbE8df9A483F38`
 - Owner: `0xf8916c192f28B3A6f5e4B731ba85f7c38fAb0eA3`
-- Deployment artifact: `artifacts/studionet-deployment.json`
+- Deployment artifact: `artifacts/bradbury-deployment.json`
 
 ## Why Solidity-Only Contracts Cannot Implement It
 
@@ -72,7 +72,7 @@ Reputation Contract: `contracts/agent_reputation.py`
 
 Storage Sanity Contract: `contracts/storage_test.py`
 
-- Minimal scalar plus `TreeMap` contract for Studionet deployment checks.
+- Minimal scalar plus `TreeMap` contract for Testnet Bradbury deployment checks.
 
 ## User Flow
 
@@ -199,30 +199,30 @@ The score is clamped to `0..1000`.
 
 - Public evidence may be malicious or unavailable.
 - Validators may disagree on subjective facts.
-- Studionet state can reset.
+- Testnet Bradbury state can reset.
 - Child transactions may fail after the main transaction finalizes.
 - Frontend state is informational only; contract state is authoritative.
 - No `.env`, private keys, or secrets belong in the repository.
 
-## Studionet Configuration
+## Testnet Bradbury Configuration
 
 ```text
-Network: Studionet
-RPC: https://studio.genlayer.com/api
-Chain ID: 61999
+Network: Testnet Bradbury
+RPC: https://rpc-bradbury.genlayer.com
+Chain ID: 4221
 Currency: GEN
-Explorer: https://explorer-studio.genlayer.com
+Explorer: https://explorer-bradbury.genlayer.com
 ```
 
 The frontend uses:
 
 ```typescript
-import { studionet } from "genlayer-js/chains";
+import { testnetBradbury } from "genlayer-js/chains";
 ```
 
-## Studionet Limitations
+## Testnet Bradbury Limitations
 
-Studionet is a temporary shared development environment. Contract addresses may disappear after reset. Native GEN balances and transfers are simulated by Studio. This is not mainnet or production deployment.
+Testnet Bradbury is a public testnet. Contract addresses can become obsolete after redeployment, and accounts need testnet GEN from the faucet before writes, deploys, escrow funding, or bond funding. This is not mainnet or production deployment.
 
 ## Folder Structure
 
@@ -268,11 +268,11 @@ gltest tests\direct -v -s
 
 ```powershell
 Set-Location -LiteralPath 'D:\app genlayer\AgentLiability'
-$env:RUN_STUDIONET_INTEGRATION='1'
-gltest tests\integration -v -s --network studionet
+$env:RUN_BRADBURY_INTEGRATION='1'
+gltest tests\integration -v -s --network testnet_bradbury
 ```
 
-Studionet integration requires a reachable Studio environment and funded account context.
+Testnet Bradbury integration requires a reachable Bradbury network and funded account context.
 
 ## Frontend Commands
 
@@ -285,18 +285,18 @@ npm run build
 npm run dev
 ```
 
-## Manual Studio Deployment
+## Manual Deployment
 
-See `docs/STUDIO_DEPLOYMENT.md` and `docs/STUDIONET_DEPLOYMENT.md`.
+See `docs/BRADBURY_DEPLOYMENT.md` and `docs/GENVM_TROUBLESHOOTING.md`.
 
-## Studionet CLI Deployment
+## Testnet Bradbury CLI Deployment
 
 ```powershell
 Set-Location -LiteralPath 'D:\app genlayer\AgentLiability'
-genlayer network studionet
-genlayer deploy --contract contracts\storage_test.py --rpc https://studio.genlayer.com/api
-genlayer deploy --contract contracts\agent_reputation.py --rpc https://studio.genlayer.com/api
-genlayer deploy --contract contracts\agent_liability.py --rpc https://studio.genlayer.com/api --args <reputation-address> 250
+genlayer network set testnet-bradbury
+genlayer deploy --contract contracts\storage_test.py --rpc https://rpc-bradbury.genlayer.com
+genlayer deploy --contract contracts\agent_reputation.py --rpc https://rpc-bradbury.genlayer.com
+genlayer deploy --contract contracts\agent_liability.py --rpc https://rpc-bradbury.genlayer.com --args <reputation-address> 250
 ```
 
 Then call `set_authorized_contract` on the reputation contract with the main contract address.
@@ -306,11 +306,11 @@ Then call `set_authorized_contract` on the reputation contract with the main con
 Root `.env`:
 
 ```env
-GENLAYER_NETWORK=studionet
-GENLAYER_RPC=https://studio.genlayer.com/api
-GENLAYER_CHAIN_ID=61999
-GENLAYER_EXPLORER=https://explorer-studio.genlayer.com
+GENLAYER_NETWORK=testnet-bradbury
+GENLAYER_RPC=https://rpc-bradbury.genlayer.com
+GENLAYER_CHAIN_ID=4221
 PROTOCOL_FEE_BPS=250
+OWNER_ADDRESS=0xf8916c192f28b3a6f5e4b731ba85f7c38fab0ea3
 ```
 
 Frontend `.env`:
@@ -318,25 +318,14 @@ Frontend `.env`:
 ```env
 VITE_MAIN_CONTRACT_ADDRESS=
 VITE_REPUTATION_CONTRACT_ADDRESS=
-VITE_GENLAYER_NETWORK=studionet
-VITE_GENLAYER_RPC=https://studio.genlayer.com/api
-VITE_GENLAYER_CHAIN_ID=61999
-VITE_GENLAYER_CURRENCY=GEN
-VITE_EXPLORER_URL=https://explorer-studio.genlayer.com
 ```
 
 ## Deployment Addresses
 
 ```text
-Storage Test Contract: NOT DEPLOYED
-Main Contract: NOT DEPLOYED
-Reputation Contract: NOT DEPLOYED
-```
-
-## Live App
-
-```text
-Live App: NOT DEPLOYED
+Storage Test Contract: `0x93231fF5b1B6449D4e69dF7483D851B712723DB8`
+Main Contract: `0x164EB8dD1B4caDB4d6dBf1F2acc0cf6F5a4A9907`
+Reputation Contract: `0x69BA8164d5684008af5c03BB53bbE8df9A483F38`
 ```
 
 ## Demo Video
@@ -347,17 +336,17 @@ Demo Video: NOT RECORDED
 
 ## Known Limitations
 
-- CLI deployment was not executed in this workspace because the `genlayer` CLI was not present in PATH during inspection.
-- Studionet integration test is gated behind `RUN_STUDIONET_INTEGRATION=1`.
+- Testnet Bradbury deploys and writes require funded Bradbury accounts.
+- Testnet Bradbury integration test is gated behind `RUN_BRADBURY_INTEGRATION=1`.
 - Frontend appeal UI is disabled because the installed SDK path does not expose a verified appeal helper for this dApp.
 - `genvm-lint check` validate step may fail on SDK artifact download for the required `v0.2.16` Studio header.
 - Vite reports a large JS chunk because `genlayer-js` and wallet dependencies are bundled.
 
 ## Roadmap
 
-- Deploy to Studionet through Hosted Studio or CLI.
+- Deploy to Testnet Bradbury through the CLI with a funded account.
 - Record a complete demo with public evidence URLs.
 - Add contract schema-driven frontend call generation.
 - Add child transaction polling per payout and reputation message.
 - Add code splitting for the frontend SDK bundle.
-- Add migration support for reputation authorization after Studionet resets.
+- Add migration support for reputation authorization after Testnet Bradbury resets.

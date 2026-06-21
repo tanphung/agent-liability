@@ -49,16 +49,16 @@ export default function App() {
           <NetworkBadge />
           <WalletButton
             account={wallet.account}
-            isStudionet={wallet.isStudionet}
+            isTargetNetwork={wallet.isTargetNetwork}
             onConnect={() => void wallet.connect()}
-            onSwitchNetwork={() => void wallet.switchToStudionet()}
+            onSwitchNetwork={() => void wallet.switchToBradbury()}
           />
         </header>
 
         <ContractStatusBanner config={config} onConfigSaved={() => setConfigVersion((value) => value + 1)} />
-        {wallet.account && !wallet.isStudionet ? (
+        {wallet.account && !wallet.isTargetNetwork ? (
           <section className="status-banner error">
-            Wallet is on chain ID {wallet.chainId ?? "unknown"}. Switch to Studionet chain ID 61999.
+            Wallet is on chain ID {wallet.chainId ?? "unknown"}. Switch to Testnet Bradbury chain ID 4221.
           </section>
         ) : null}
         {wallet.error ? <section className="status-banner error">{wallet.error}</section> : null}

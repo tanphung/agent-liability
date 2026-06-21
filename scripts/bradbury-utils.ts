@@ -2,18 +2,20 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
-export const STUDIONET = {
-  network: "studionet",
-  rpc: "https://studio.genlayer.com/api",
-  chainId: 61999,
-  explorer: "https://explorer-studio.genlayer.com",
+export const BRADBURY = {
+  network: "testnet-bradbury",
+  rpc: "https://rpc-bradbury.genlayer.com",
+  chainRpc: "https://rpc.testnet-chain.genlayer.com",
+  chainId: 4221,
+  explorer: "https://explorer-bradbury.genlayer.com",
+  chainExplorer: "https://explorer.testnet-chain.genlayer.com",
   currency: "GEN"
 } as const;
 
 export type DeploymentArtifact = {
-  network: "studionet";
-  rpc: typeof STUDIONET.rpc;
-  chainId: typeof STUDIONET.chainId;
+  network: typeof BRADBURY.network;
+  rpc: typeof BRADBURY.rpc;
+  chainId: typeof BRADBURY.chainId;
   storageTestAddress: `0x${string}`;
   reputationContractAddress: `0x${string}`;
   mainContractAddress: `0x${string}`;
@@ -50,18 +52,18 @@ export function loadEnv(path = ".env"): Record<string, string> {
   return { ...values, ...process.env } as Record<string, string>;
 }
 
-export function requireStudionet(env: Record<string, string>): void {
-  const network = env.GENLAYER_NETWORK || STUDIONET.network;
-  const rpc = env.GENLAYER_RPC || STUDIONET.rpc;
-  const chainId = Number(env.GENLAYER_CHAIN_ID || STUDIONET.chainId);
-  if (network !== STUDIONET.network) {
-    throw new Error(`Only Studionet is supported. Got GENLAYER_NETWORK=${network}`);
+export function requireBradbury(env: Record<string, string>): void {
+  const network = env.GENLAYER_NETWORK || BRADBURY.network;
+  const rpc = env.GENLAYER_RPC || BRADBURY.rpc;
+  const chainId = Number(env.GENLAYER_CHAIN_ID || BRADBURY.chainId);
+  if (network !== BRADBURY.network) {
+    throw new Error(`Only Testnet Bradbury is supported. Got GENLAYER_NETWORK=${network}`);
   }
-  if (rpc !== STUDIONET.rpc) {
-    throw new Error(`Only ${STUDIONET.rpc} is supported. Got GENLAYER_RPC=${rpc}`);
+  if (rpc !== BRADBURY.rpc) {
+    throw new Error(`Only ${BRADBURY.rpc} is supported. Got GENLAYER_RPC=${rpc}`);
   }
-  if (chainId !== STUDIONET.chainId) {
-    throw new Error(`Only chain ID ${STUDIONET.chainId} is supported. Got ${chainId}`);
+  if (chainId !== BRADBURY.chainId) {
+    throw new Error(`Only chain ID ${BRADBURY.chainId} is supported. Got ${chainId}`);
   }
 }
 
@@ -116,15 +118,27 @@ export function runCommand(command: string, args: string[]): string {
   return output;
 }
 
-export function configureStudionetCli(): void {
+export function configureBradburyCli(): void {
   try {
-    runCommand("genlayer", ["network", STUDIONET.network]);
+    runCommand("genlayer", ["network", BRADBURY.network]);
   } catch (firstError) {
     try {
-      runCommand("genlayer", ["network", "set", STUDIONET.network]);
+      runCommand("genlayer", ["network", "set", BRADBURY.network]);
     } catch {
       throw firstError;
     }
+  }
+}
+
+export function requireFundedActiveAccount(): void {
+  const output = runCommand("genlayer", ["account", "show"]);
+  const address = output.match(/address:\s*'([^']+)'/)?.[1] ?? "active account";
+  const balance = output.match(/balance:\s*'([^']+)'/)?.[1] ?? "unknown";
+  if (/^0(?:\.0+)?\s+GEN$/i.test(balance)) {
+    throw new Error(
+      `Active deploy account ${address} has 0 GEN on Testnet Bradbury. ` +
+        "Fund it at https://testnet-faucet.genlayer.foundation/ before running npm run deploy:bradbury."
+    );
   }
 }
 
@@ -149,7 +163,7 @@ export function deployContract(contractPath: string, args: string[] = []): {
   output: string;
 } {
   assertFile(contractPath);
-  const cliArgs = ["deploy", "--contract", contractPath, "--rpc", STUDIONET.rpc];
+  const cliArgs = ["deploy", "--contract", contractPath, "--rpc", BRADBURY.rpc];
   if (args.length > 0) {
     cliArgs.push("--args", ...args);
   }
@@ -159,7 +173,7 @@ export function deployContract(contractPath: string, args: string[] = []): {
 }
 
 export function writeContract(address: string, method: string, args: string[] = []): string {
-  const cliArgs = ["write", address, method, "--rpc", STUDIONET.rpc];
+  const cliArgs = ["write", address, method, "--rpc", BRADBURY.rpc];
   if (args.length > 0) {
     cliArgs.push("--args", ...args);
   }
@@ -167,7 +181,7 @@ export function writeContract(address: string, method: string, args: string[] = 
 }
 
 export function callContract(address: string, method: string, args: string[] = []): string {
-  const cliArgs = ["call", address, method, "--rpc", STUDIONET.rpc];
+  const cliArgs = ["call", address, method, "--rpc", BRADBURY.rpc];
   if (args.length > 0) {
     cliArgs.push("--args", ...args);
   }
@@ -179,13 +193,13 @@ export function saveArtifact(path: string, artifact: DeploymentArtifact): void {
   writeFileSync(path, `${JSON.stringify(artifact, null, 2)}\n`);
 }
 
-export function loadArtifact(path = "artifacts/studionet-deployment.json"): DeploymentArtifact {
+export function loadArtifact(path = "artifacts/bradbury-deployment.json"): DeploymentArtifact {
   if (!existsSync(path)) {
     throw new Error(`Deployment artifact not found: ${path}`);
   }
   const parsed = JSON.parse(readFileSync(path, "utf8")) as DeploymentArtifact;
-  if (parsed.network !== STUDIONET.network || parsed.rpc !== STUDIONET.rpc) {
-    throw new Error("Deployment artifact is not for Studionet");
+  if (parsed.network !== BRADBURY.network || parsed.rpc !== BRADBURY.rpc) {
+    throw new Error("Deployment artifact is not for Testnet Bradbury");
   }
   assertAddress(parsed.storageTestAddress, "storageTestAddress");
   assertAddress(parsed.reputationContractAddress, "reputationContractAddress");
@@ -194,5 +208,5 @@ export function loadArtifact(path = "artifacts/studionet-deployment.json"): Depl
 }
 
 export function explorerLink(hashOrAddress: string): string {
-  return `${STUDIONET.explorer}/search?q=${encodeURIComponent(hashOrAddress)}`;
+  return `${BRADBURY.explorer}/search?q=${encodeURIComponent(hashOrAddress)}`;
 }

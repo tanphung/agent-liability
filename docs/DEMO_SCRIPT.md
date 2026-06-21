@@ -46,7 +46,7 @@ Failure:
 
 ## Evidence URLs
 
-Use public or locally hosted static evidence URLs that Studionet can access:
+Use public or locally hosted static evidence URLs that Testnet Bradbury can access:
 
 - specification document
 - planning report
@@ -71,7 +71,7 @@ AgentLiability reconstructs the causal chain rather than blaming the final execu
 
 ## Recording Script
 
-1. Show Studionet.
+1. Show Testnet Bradbury.
 2. Show wallet.
 3. Create case.
 4. Add agents.

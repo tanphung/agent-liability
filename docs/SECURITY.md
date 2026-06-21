@@ -42,11 +42,11 @@ The frontend displays state and submits transactions, but contract state is auth
 
 ## Wrong-Network Transaction
 
-The frontend imports `studionet`, calls `connect("studionet")` before writes, and warns when the wallet chain ID is not `61999`.
+The frontend imports `Testnet Bradbury`, calls `connect("Testnet Bradbury")` before writes, and warns when the wallet chain ID is not `4221`.
 
-## Temporary Studionet State
+## Temporary Testnet Bradbury State
 
-Studionet resets can invalidate addresses. The frontend shows contract-unavailable errors when env addresses are missing or invalid. Redeployments update `.env`; source code does not need address edits.
+Testnet Bradbury resets can invalidate addresses. The frontend shows contract-unavailable errors when env addresses are missing or invalid. Redeployments update `.env`; source code does not need address edits.
 
 ## Child Transactions
 

@@ -1,5 +1,5 @@
 import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
+import { testnetBradbury } from "genlayer-js/chains";
 import { TransactionStatus } from "genlayer-js/types";
 import type { HexAddress, TransactionRecord } from "../types/contracts";
 import { getWalletProvider } from "./walletProvider";
@@ -48,7 +48,7 @@ function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: st
 }
 
 export const readClient = createClient({
-  chain: studionet,
+  chain: testnetBradbury,
   account: DEFAULT_READ_ACCOUNT
 }) as unknown as GenLayerClient;
 
@@ -58,7 +58,7 @@ export function createWalletClient(account: HexAddress): GenLayerClient {
     throw new Error("No browser wallet provider found");
   }
   return createClient({
-    chain: studionet,
+    chain: testnetBradbury,
     account,
     provider
   }) as unknown as GenLayerClient;

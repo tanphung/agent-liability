@@ -1,27 +1,29 @@
 import {
-  STUDIONET,
-  configureStudionetCli,
+  BRADBURY,
+  configureBradburyCli,
   deployContract,
   explorerLink,
   loadEnv,
   optionalOwnerAddress,
   protocolFeeBps,
-  requireStudionet,
+  requireBradbury,
+  requireFundedActiveAccount,
   runCommand,
   saveArtifact,
   writeContract
-} from "./studionet-utils.js";
+} from "./bradbury-utils.js";
 
 const env = loadEnv();
-requireStudionet(env);
+requireBradbury(env);
 const feeBps = protocolFeeBps(env);
 const ownerAddress = optionalOwnerAddress(env);
 
-console.log("Deploying AgentLiability to Studionet");
-console.log(`RPC: ${STUDIONET.rpc}`);
+console.log("Deploying AgentLiability to Testnet Bradbury");
+console.log(`RPC: ${BRADBURY.rpc}`);
 console.log(`Protocol fee bps: ${feeBps}`);
 
-configureStudionetCli();
+configureBradburyCli();
+requireFundedActiveAccount();
 
 const storage = deployContract("contracts\\storage_test.py");
 console.log(`Storage Test Address: ${storage.address}`);
@@ -53,13 +55,13 @@ if (ownerAddress) {
     | undefined;
 }
 
-runCommand("genlayer", ["schema", main.address, "--rpc", STUDIONET.rpc]);
-runCommand("genlayer", ["schema", reputation.address, "--rpc", STUDIONET.rpc]);
+runCommand("genlayer", ["schema", main.address, "--rpc", BRADBURY.rpc]);
+runCommand("genlayer", ["schema", reputation.address, "--rpc", BRADBURY.rpc]);
 
 const artifact = {
-  network: STUDIONET.network,
-  rpc: STUDIONET.rpc,
-  chainId: STUDIONET.chainId,
+  network: BRADBURY.network,
+  rpc: BRADBURY.rpc,
+  chainId: BRADBURY.chainId,
   storageTestAddress: storage.address,
   reputationContractAddress: reputation.address,
   mainContractAddress: main.address,
@@ -74,9 +76,9 @@ const artifact = {
   createdAt: new Date().toISOString()
 } as const;
 
-saveArtifact("artifacts/studionet-deployment.json", artifact);
+saveArtifact("artifacts/bradbury-deployment.json", artifact);
 
-console.log("Deployment artifact saved: artifacts/studionet-deployment.json");
+console.log("Deployment artifact saved: artifacts/bradbury-deployment.json");
 console.log(`Explorer main: ${explorerLink(main.address)}`);
 if (main.txHash) {
   console.log(`Explorer main tx: ${explorerLink(main.txHash)}`);

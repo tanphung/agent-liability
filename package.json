@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "deploy:studionet": "tsx scripts/deploy.ts",
-    "verify:studionet": "tsx scripts/verify-deployment.ts",
-    "smoke:studionet": "tsx scripts/smoke-test.ts",
+    "deploy:bradbury": "tsx scripts/deploy.ts",
+    "verify:bradbury": "tsx scripts/verify-deployment.ts",
+    "smoke:bradbury": "tsx scripts/smoke-test.ts",
     "typecheck": "tsc -p tsconfig.scripts.json --noEmit",
     "lint": "eslint scripts/**/*.ts",
     "test": "vitest run",

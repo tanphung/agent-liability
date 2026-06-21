@@ -1,8 +1,8 @@
 export function NetworkBadge() {
   return (
-    <div className="network-badge" aria-label="Studionet network">
+    <div className="network-badge" aria-label="Testnet Bradbury network">
       <span />
-      Studionet
+      Testnet Bradbury
     </div>
   );
 }

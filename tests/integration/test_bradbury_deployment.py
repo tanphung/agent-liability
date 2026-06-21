@@ -4,12 +4,12 @@ import pytest
 
 
 pytestmark = pytest.mark.skipif(
-    os.getenv("RUN_STUDIONET_INTEGRATION") != "1",
-    reason="Studionet integration requires RUN_STUDIONET_INTEGRATION=1 and funded Studio account",
+    os.getenv("RUN_BRADBURY_INTEGRATION") != "1",
+    reason="Testnet Bradbury integration requires RUN_BRADBURY_INTEGRATION=1 and funded Bradbury account",
 )
 
 
-def test_studionet_storage_sanity_deploys():
+def test_bradbury_storage_sanity_deploys():
     from gltest import get_contract_factory
     from gltest.assertions import tx_execution_succeeded
 

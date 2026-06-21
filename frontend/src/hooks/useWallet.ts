@@ -52,7 +52,7 @@ export function useWallet() {
     setChainId(normalizeChainId(rawChainId));
   }, []);
 
-  const switchToStudionet = useCallback(async () => {
+  const switchToBradbury = useCallback(async () => {
     const provider = getWalletProvider();
     if (!provider) {
       setError("No wallet provider found");
@@ -62,7 +62,7 @@ export function useWallet() {
     try {
       await provider.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0xf22f" }]
+        params: [{ chainId: "0x107d" }]
       });
     } catch (switchError) {
       const code =
@@ -77,15 +77,15 @@ export function useWallet() {
         method: "wallet_addEthereumChain",
         params: [
           {
-            chainId: "0xf22f",
-            chainName: "GenLayer Studionet",
+            chainId: "0x107d",
+            chainName: "GenLayer Testnet Bradbury",
             nativeCurrency: {
               name: "GEN",
               symbol: "GEN",
               decimals: 18
             },
-            rpcUrls: ["https://studio.genlayer.com/api"],
-            blockExplorerUrls: ["https://explorer-studio.genlayer.com"]
+            rpcUrls: ["https://rpc.testnet-chain.genlayer.com"],
+            blockExplorerUrls: ["https://explorer.testnet-chain.genlayer.com"]
           }
         ]
       });
@@ -112,10 +112,10 @@ export function useWallet() {
   return {
     account,
     chainId,
-    isStudionet: chainId === 61999,
+    isTargetNetwork: chainId === 4221,
     error,
     connect,
-    switchToStudionet,
+    switchToBradbury,
     refresh
   };
 }

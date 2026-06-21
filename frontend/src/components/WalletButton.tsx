@@ -4,17 +4,17 @@ import type { HexAddress } from "../types/contracts";
 
 type Props = {
   account: HexAddress | null;
-  isStudionet: boolean;
+  isTargetNetwork: boolean;
   onConnect: () => void;
   onSwitchNetwork: () => void;
 };
 
-export function WalletButton({ account, isStudionet, onConnect, onSwitchNetwork }: Props) {
-  if (account && !isStudionet) {
+export function WalletButton({ account, isTargetNetwork, onConnect, onSwitchNetwork }: Props) {
+  if (account && !isTargetNetwork) {
     return (
       <button className="button wallet-button" onClick={onSwitchNetwork} type="button">
         <Wallet size={18} />
-        Switch to Studionet
+        Switch to Bradbury
         <span className="warn-dot" title="Wrong network" />
       </button>
     );

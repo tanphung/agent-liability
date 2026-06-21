@@ -1,16 +1,16 @@
 import {
-  STUDIONET,
+  BRADBURY,
   assertAddress,
   callContract,
   loadArtifact,
   loadEnv,
   protocolFeeBps,
-  requireStudionet,
+  requireBradbury,
   runCommand
-} from "./studionet-utils.js";
+} from "./bradbury-utils.js";
 
 const env = loadEnv();
-requireStudionet(env);
+requireBradbury(env);
 
 const artifact = loadArtifact();
 const expectedFee = protocolFeeBps(env);
@@ -19,13 +19,13 @@ assertAddress(artifact.storageTestAddress, "Storage Test Address");
 assertAddress(artifact.reputationContractAddress, "Reputation Contract Address");
 assertAddress(artifact.mainContractAddress, "Main Contract Address");
 
-console.log(`Network: ${STUDIONET.network}`);
-console.log(`RPC: ${STUDIONET.rpc}`);
-console.log(`Chain ID: ${STUDIONET.chainId}`);
+console.log(`Network: ${BRADBURY.network}`);
+console.log(`RPC: ${BRADBURY.rpc}`);
+console.log(`Chain ID: ${BRADBURY.chainId}`);
 
-runCommand("genlayer", ["code", artifact.mainContractAddress, "--rpc", STUDIONET.rpc]);
-runCommand("genlayer", ["schema", artifact.mainContractAddress, "--rpc", STUDIONET.rpc]);
-runCommand("genlayer", ["schema", artifact.reputationContractAddress, "--rpc", STUDIONET.rpc]);
+runCommand("genlayer", ["code", artifact.mainContractAddress, "--rpc", BRADBURY.rpc]);
+runCommand("genlayer", ["schema", artifact.mainContractAddress, "--rpc", BRADBURY.rpc]);
+runCommand("genlayer", ["schema", artifact.reputationContractAddress, "--rpc", BRADBURY.rpc]);
 
 const mainConfig = callContract(artifact.mainContractAddress, "get_protocol_config");
 if (!mainConfig.includes(String(expectedFee))) {
@@ -42,4 +42,4 @@ if (!repConfig.toLowerCase().includes(artifact.mainContractAddress.toLowerCase()
 
 callContract(artifact.mainContractAddress, "get_case_count");
 
-console.log("Studionet deployment verified");
+console.log("Testnet Bradbury deployment verified");

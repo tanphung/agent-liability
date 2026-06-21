@@ -5,28 +5,28 @@ export type AppConfig =
       ok: true;
       mainContractAddress: HexAddress;
       reputationContractAddress: HexAddress;
-      network: "studionet";
-      rpc: "https://studio.genlayer.com/api";
-      chainId: 61999;
+      network: "testnet-bradbury";
+      rpc: "https://rpc-bradbury.genlayer.com";
+      chainId: 4221;
       currency: "GEN";
-      explorerUrl: "https://explorer-studio.genlayer.com";
+      explorerUrl: "https://explorer-bradbury.genlayer.com";
     }
   | {
       ok: false;
       errors: string[];
-      network: "studionet";
-      rpc: "https://studio.genlayer.com/api";
-      chainId: 61999;
+      network: "testnet-bradbury";
+      rpc: "https://rpc-bradbury.genlayer.com";
+      chainId: 4221;
       currency: "GEN";
-      explorerUrl: "https://explorer-studio.genlayer.com";
+      explorerUrl: "https://explorer-bradbury.genlayer.com";
     };
 
-const STUDIONET = {
-  network: "studionet",
-  rpc: "https://studio.genlayer.com/api",
-  chainId: 61999,
+const BRADBURY = {
+  network: "testnet-bradbury",
+  rpc: "https://rpc-bradbury.genlayer.com",
+  chainId: 4221,
   currency: "GEN",
-  explorerUrl: "https://explorer-studio.genlayer.com"
+  explorerUrl: "https://explorer-bradbury.genlayer.com"
 } as const;
 
 const MAIN_ADDRESS_KEY = "agentliability.mainContractAddress";
@@ -68,14 +68,14 @@ export function readConfig(): AppConfig {
   }
 
   if (errors.length > 0) {
-    return { ok: false, errors, ...STUDIONET };
+    return { ok: false, errors, ...BRADBURY };
   }
 
   return {
     ok: true,
     mainContractAddress: mainContractAddress as HexAddress,
     reputationContractAddress: reputationContractAddress as HexAddress,
-    ...STUDIONET
+    ...BRADBURY
   };
 }
 
