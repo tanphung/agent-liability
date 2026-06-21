@@ -1,6 +1,7 @@
-import { Plus, Send } from "lucide-react";
+import { Plus, Send, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { executeWrite, readScalar } from "../lib/genlayer";
+import { DEMO_AGENTS, DEMO_CASE, getDemoDeadlineInput } from "../lib/demoData";
 import type { HexAddress, TransactionRecord } from "../types/contracts";
 import { parseGenToWei, percentToBps } from "../utils/format";
 
@@ -42,6 +43,16 @@ export function CreateCase({
   const [busy, setBusy] = useState(false);
 
   const disabled = !account || !mainContract || busy;
+
+  function fillDemoCase() {
+    setTitle(DEMO_CASE.title);
+    setSpecUrl(DEMO_CASE.specificationUrl);
+    setManifestUrl(DEMO_CASE.manifestUrl);
+    setCriteria(DEMO_CASE.acceptanceCriteria);
+    setDeadline(getDemoDeadlineInput());
+    setEscrowGen(DEMO_CASE.escrowGen);
+    setAgents(DEMO_AGENTS);
+  }
 
   async function submit() {
     if (!account || !mainContract) {
@@ -97,7 +108,13 @@ export function CreateCase({
 
   return (
     <section className="panel form-panel">
-      <h2>Create Case</h2>
+      <div className="section-heading">
+        <h2>Create Case</h2>
+        <button className="button secondary" onClick={fillDemoCase} type="button">
+          <Wand2 size={18} />
+          Fill Demo Case
+        </button>
+      </div>
       {error ? <div className="inline-error">{error}</div> : null}
       <label>
         Title

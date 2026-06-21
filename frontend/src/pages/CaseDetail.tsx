@@ -1,4 +1,4 @@
-import { AlertOctagon, Gavel, Plus, Upload } from "lucide-react";
+import { AlertOctagon, Gavel, Plus, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AgentResponsibilityCard } from "../components/AgentResponsibilityCard";
 import { CaseStatusBadge } from "../components/CaseStatusBadge";
@@ -8,6 +8,7 @@ import { LoadingSkeleton } from "../components/LoadingSkeleton";
 import { PayoutBreakdown } from "../components/PayoutBreakdown";
 import { executeWrite } from "../lib/genlayer";
 import { readCaseBundle } from "../hooks/useCases";
+import { getDemoAgent } from "../lib/demoData";
 import type { AgentSummary, CaseSummary, Decision, HexAddress, TransactionRecord } from "../types/contracts";
 import { parseGenToWei, percentToBps, shorten, weiToGen } from "../utils/format";
 
@@ -104,18 +105,13 @@ export function CaseDetail({
 
   function fillDemoAgent() {
     const slot = summary?.agent_count ?? 0;
+    const agent = getDemoAgent(slot);
     setDraftAgent({
-      wallet:
-        slot === 0
-          ? "0xf8916c192f28b3a6f5e4b731ba85f7c38fab0ea3"
-          : "0x0722badf775692294241e40ae0fdb31047b6a2c6",
-      role: slot === 0 ? "Planning Agent" : "Coding Agent",
-      scopeUrl:
-        slot === 0
-          ? "https://raw.githubusercontent.com/tanphung/agent-liability/main/README.md"
-          : "https://raw.githubusercontent.com/tanphung/agent-liability/main/contracts/agent_liability.py",
-      allocationPercent: slot === 0 ? "60" : "40",
-      bondGen: "0"
+      wallet: agent.wallet,
+      role: agent.role,
+      scopeUrl: agent.scopeUrl,
+      allocationPercent: agent.allocationPercent,
+      bondGen: agent.bondGen
     });
   }
 
@@ -227,15 +223,25 @@ export function CaseDetail({
               </div>
             </>
           ) : null}
-          <button
-            className="button primary"
-            disabled={summary.agent_count < 2}
-            onClick={() => void write("activate_case", [summary.case_id], "Activate case")}
-            type="button"
-          >
-            <Upload size={18} />
-            Activate Case
-          </button>
+          <div className="button-row">
+            <button
+              className="button secondary"
+              onClick={() => void write("cancel_draft", [summary.case_id], "Cancel draft")}
+              type="button"
+            >
+              <Trash2 size={18} />
+              Cancel Draft
+            </button>
+            <button
+              className="button primary"
+              disabled={summary.agent_count < 2}
+              onClick={() => void write("activate_case", [summary.case_id], "Activate case")}
+              type="button"
+            >
+              <Upload size={18} />
+              Activate Case
+            </button>
+          </div>
         </section>
       ) : null}
 

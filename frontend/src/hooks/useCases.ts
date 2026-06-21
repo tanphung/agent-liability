@@ -23,7 +23,9 @@ export function useCases(mainContract: HexAddress | null) {
       } else {
         const start = Math.max(0, count - 10);
         const range = await readJson<CaseSummary[]>(mainContract, "get_case_range", [start, 10]);
-        setCases(range);
+        const liveCases = range.filter((item) => item.status !== "CANCELLED");
+        setCases(liveCases);
+        setCaseCount(liveCases.length);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

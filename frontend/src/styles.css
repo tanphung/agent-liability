@@ -188,6 +188,13 @@ a {
   align-items: center;
 }
 
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .hero-panel p,
 .hero-panel small {
   color: #aeb9c5;
@@ -208,6 +215,10 @@ h1 {
 
 h2 {
   font-size: 18px;
+}
+
+.section-heading h2 {
+  margin-bottom: 0;
 }
 
 .panel,
@@ -470,5 +481,10 @@ legend {
 
   .case-row {
     grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

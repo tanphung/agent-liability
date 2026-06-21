@@ -33,7 +33,7 @@ export function Dashboard({
 
       <div className="metric-grid">
         <div>
-          <span>Total cases</span>
+          <span>Recent live cases</span>
           <strong>{caseCount}</strong>
         </div>
         {["DRAFT", "FUNDING", "ACTIVE", "DISPUTED", "DECIDED"].map((status) => (
