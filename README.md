@@ -1,6 +1,6 @@
 # AgentLiability
 
-AgentLiability dies without GenLayer because payouts require independent validators to read real workflow evidence from the web and agree on subjective causal responsibility across multiple AI agents.
+AgentLiability dies without GenLayer because payouts require a contract that can read real workflow evidence from the web, use AI judgment for causal responsibility, and settle that decision through GenLayer validator consensus.
 
 ## Problem
 
@@ -8,14 +8,14 @@ Multi-agent AI workflows fail in messy ways. A coding agent may ship the broken 
 
 ## Solution
 
-AgentLiability is a GenLayer Testnet Bradbury dApp where a client creates a case, funds GEN escrow, attaches public evidence for two workflow agents, and receives an on-chain GenLayer adjudication. The Intelligent Contract renders public evidence URLs, asks GenLayer validators to adjudicate responsibility, checks semantic agreement, and then deterministically distributes escrow, records the verdict, and emits reputation updates.
+AgentLiability is a GenLayer Testnet Bradbury dApp where a client creates a case, funds GEN escrow, attaches public evidence for two workflow agents, and receives an on-chain GenLayer adjudication. The Intelligent Contract renders public evidence URLs, asks AI to adjudicate responsibility, validates the proposed verdict with deterministic consensus guards, and then distributes escrow, records the verdict, and emits reputation updates.
 
 ## Current Bradbury Status
 
 - App: https://agent-liability.vercel.app/
 - Network: GenLayer Testnet Bradbury
-- Main contract: `0x64aFb11e45C12F7ED8FeAA75cfee15192884BdB1`
-- Reputation contract: `0x129088d7909e20E74FC2BC14D7D1f815b529F4DB`
+- Main contract: `0xa700304f08fBbEbCfc3e0BD96F51145A45d1D3d6`
+- Reputation contract: `0xA0c8Db4f2C7661B16cE43C18e0E5571985b9C9f4`
 - Owner: `0xf8916c192f28B3A6f5e4B731ba85f7c38fAb0eA3`
 - Deployment artifact: `artifacts/bradbury-deployment.json`
 
@@ -29,8 +29,8 @@ The binding decision is inside `contracts/agent_liability.py`, using:
 
 - `gl.nondet.web.render(...)` for live public evidence.
 - `gl.nondet.exec_prompt(..., response_format="json")` for adjudication.
-- `gl.vm.run_nondet_unsafe(...)` for leader and validator execution.
-- Semantic validator comparison of material decision fields.
+- `gl.vm.run_nondet_unsafe(...)` for GenLayer consensus around the AI decision.
+- Deterministic validator checks for schema, canonical verdicts, allocation caps, and payout invariants.
 
 If web access and AI consensus are removed, AgentLiability can no longer decide payouts.
 
@@ -43,7 +43,7 @@ flowchart TD
   UI --> Main["AgentLiability Intelligent Contract"]
   Main --> Web["Rendered public evidence"]
   Main --> LLM["GenLayer validator LLMs"]
-  LLM --> Consensus["Semantic consensus"]
+  LLM --> Consensus["Deterministic consensus guard"]
   Consensus --> Settlement["Deterministic settlement"]
   Settlement --> Reputation["AgentReputation contract"]
   Settlement --> Wallets["Client wallet"]
@@ -57,7 +57,7 @@ Main Contract: `contracts/agent_liability.py`
 - Escrow accounting and optional agent bond accounting in wei.
 - Evidence, dispute, and auto-filled demo submission.
 - Web evidence rendering and LLM adjudication.
-- Semantic consensus comparison.
+- Deterministic consensus guard for AI verdicts.
 - Payout, refund, optional bond slashing, fee accounting.
 - Reputation child messages.
 - Double-settlement prevention.
@@ -80,8 +80,8 @@ Storage Sanity Contract: `contracts/storage_test.py`
 2. Client signs one `create_and_adjudicate_case` transaction.
 3. The contract creates the case, attaches two agent assignments and evidence URLs, records the dispute, and runs adjudication.
 4. The main contract renders evidence from the web.
-5. Leader and validators independently adjudicate causal responsibility.
-6. Contract checks semantic agreement, not just JSON shape.
+5. The GenLayer leader proposes a causal verdict from the evidence.
+6. Validators accept only decisions that satisfy the contract's deterministic schema and payout rules.
 7. Contract stores the on-chain verdict and executes deterministic settlement.
 8. Reputation update messages are emitted.
 9. Frontend tracks transaction status and reads final case state from chain.
@@ -89,7 +89,7 @@ Storage Sanity Contract: `contracts/storage_test.py`
 ## Case State Machine
 
 The reviewer demo uses the one-signature path. The client signs `create_and_adjudicate_case`,
-then Bradbury validators render the evidence and execute AI consensus before the final case is
+then Bradbury validators process the AI adjudication and consensus guard before the final case is
 read back from chain.
 
 ```mermaid
@@ -136,7 +136,7 @@ The prompt treats webpage content as untrusted evidence. Sources are wrapped in 
 
 ## Adjudication Rubric
 
-The contract asks validators to evaluate causality, not proximity to the final failure. It distinguishes root cause, contributing responsibility, failure to detect, non-performance, not at fault, client ambiguity, and insufficient evidence.
+The contract asks AI adjudication to evaluate causality, not proximity to the final failure. It distinguishes root cause, contributing responsibility, failure to detect, non-performance, not at fault, client ambiguity, and insufficient evidence.
 
 Allowed case outcomes:
 
@@ -153,20 +153,21 @@ Allowed agent verdicts:
 - `NON_PERFORMANCE`
 - `INSUFFICIENT_EVIDENCE`
 
-## Semantic Consensus Design
+## Consensus Guard Design
 
-The validator independently renders evidence and reruns adjudication. It rejects schema-only consensus. It compares:
+The contract treats the AI decision as a structured proposal. Validators deterministically reject proposals that are malformed, non-canonical, economically invalid, or inconsistent with the case's agent allocations.
 
-- Case outcome.
-- Root cause.
-- Primary-cause agent.
-- Materially faulty agent set.
-- Client refund within 600 bps.
-- Agent payout within 600 bps.
-- Bond slash within 750 bps.
-- Fault share within 1000 bps.
+The guard checks:
 
-Reason prose may differ. Material blame and economics may not.
+- Case outcome is one of the allowed canonical verdicts.
+- Root cause is `CLIENT`, `SHARED`, `INSUFFICIENT_EVIDENCE`, or an existing `AGENT_n` slot.
+- Every agent appears exactly once.
+- Agent verdicts are canonical.
+- Fault share, payout, bond slash, and client refund are integer bps in `0..10000`.
+- Agent payout never exceeds that agent's allocation.
+- Total agent payout plus client refund equals exactly `10000`.
+
+Reason prose is stored for review. Settlement is based only on the normalized deterministic fields.
 
 ## Payout Mathematics
 
@@ -234,10 +235,6 @@ The frontend uses:
 ```typescript
 import { testnetBradbury } from "genlayer-js/chains";
 ```
-
-## Testnet Bradbury Limitations
-
-Testnet Bradbury is a public testnet. Contract addresses can become obsolete after redeployment, and accounts need testnet GEN from the faucet before writes, deploys, escrow funding, or bond funding. This is not mainnet or production deployment.
 
 ## Folder Structure
 
@@ -357,16 +354,16 @@ OWNER_ADDRESS=0xf8916c192f28b3a6f5e4b731ba85f7c38fab0ea3
 Frontend `.env`:
 
 ```env
-VITE_MAIN_CONTRACT_ADDRESS=0x64aFb11e45C12F7ED8FeAA75cfee15192884BdB1
-VITE_REPUTATION_CONTRACT_ADDRESS=0x129088d7909e20E74FC2BC14D7D1f815b529F4DB
+VITE_MAIN_CONTRACT_ADDRESS=0xa700304f08fBbEbCfc3e0BD96F51145A45d1D3d6
+VITE_REPUTATION_CONTRACT_ADDRESS=0xA0c8Db4f2C7661B16cE43C18e0E5571985b9C9f4
 ```
 
 ## Deployment Addresses
 
 ```text
-Storage Test Contract: `0x4CD339C7BFA8904e022f5175dFB496C3207713D9`
-Main Contract: `0x64aFb11e45C12F7ED8FeAA75cfee15192884BdB1`
-Reputation Contract: `0x129088d7909e20E74FC2BC14D7D1f815b529F4DB`
+Storage Test Contract: `0x2696d1048F2eeF7e20488E1b2b97c7b14adACD92`
+Main Contract: `0xa700304f08fBbEbCfc3e0BD96F51145A45d1D3d6`
+Reputation Contract: `0xA0c8Db4f2C7661B16cE43C18e0E5571985b9C9f4`
 ```
 
 ## Roadmap

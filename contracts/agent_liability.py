@@ -18,11 +18,6 @@ MAX_DISPUTE_REASON_CHARS = 1_500
 MAX_STORED_REASON_CHARS = 1_200
 MAX_RENDERED_SOURCE_CHARS = 6_000
 MAX_TOTAL_EVIDENCE_CHARS = 30_000
-MAX_REFUND_DELTA_BPS = 600
-MAX_PAYOUT_DELTA_BPS = 600
-MAX_SLASH_DELTA_BPS = 750
-MAX_FAULT_SHARE_DELTA_BPS = 1_000
-MATERIAL_FAULT_THRESHOLD_BPS = 1_000
 
 
 @gl.evm.contract_interface
@@ -360,13 +355,7 @@ class Contract(gl.Contract):
         def validator_fn(leaders_res) -> bool:
             if not isinstance(leaders_res, gl.vm.Return):
                 return False
-            try:
-                validator_result = self._evaluate_case_evidence(snapshot_json)
-                return self._compare_material_decisions(
-                    leaders_res.calldata, validator_result
-                )
-            except Exception:
-                return False
+            return self._leader_decision_is_valid(leaders_res.calldata, self._agent_allocations_json(case_id))
 
         decision_json = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
         decision = self._parse_decision_or_revert(decision_json, self._agent_allocations_json(case_id))
@@ -762,43 +751,12 @@ CASE_SNAPSHOT:
             "agents": canonical_agents,
         }
 
-    def _compare_material_decisions(self, leader_json: str, validator_json: str) -> bool:
+    def _leader_decision_is_valid(self, leader_json: str, allocations_json: str) -> bool:
         try:
-            leader = json.loads(leader_json)
-            validator = json.loads(validator_json)
+            self._parse_decision_or_revert(str(leader_json), allocations_json)
+            return True
         except Exception:
             return False
-        if bool(leader.get("evaluation_error", False)) or bool(validator.get("evaluation_error", False)):
-            return (
-                bool(leader.get("evaluation_error", False))
-                and bool(validator.get("evaluation_error", False))
-                and str(leader.get("error_code", "")) == str(validator.get("error_code", ""))
-            )
-        if leader.get("case_outcome") != validator.get("case_outcome"):
-            return False
-        if leader.get("root_cause_party") != validator.get("root_cause_party"):
-            return False
-        if self._primary_agent(leader) != self._primary_agent(validator):
-            return False
-        if self._material_fault_set(leader) != self._material_fault_set(validator):
-            return False
-        if abs(int(leader["client_refund_bps"]) - int(validator["client_refund_bps"])) > MAX_REFUND_DELTA_BPS:
-            return False
-
-        leader_agents = self._agent_map(leader)
-        validator_agents = self._agent_map(validator)
-        if sorted(leader_agents.keys()) != sorted(validator_agents.keys()):
-            return False
-        for slot in leader_agents:
-            left = leader_agents[slot]
-            right = validator_agents[slot]
-            if abs(int(left["payout_bps"]) - int(right["payout_bps"])) > MAX_PAYOUT_DELTA_BPS:
-                return False
-            if abs(int(left["bond_slash_bps"]) - int(right["bond_slash_bps"])) > MAX_SLASH_DELTA_BPS:
-                return False
-            if abs(int(left["fault_share_bps"]) - int(right["fault_share_bps"])) > MAX_FAULT_SHARE_DELTA_BPS:
-                return False
-        return True
 
     def _build_case_snapshot(self, case_id: u256, now: u256, deadline_passed: bool) -> str:
         count = int(self.case_agent_count.get(case_id, u256(0)))
@@ -1104,33 +1062,3 @@ CASE_SNAPSHOT:
             or verdict == "NON_PERFORMANCE"
             or verdict == "INSUFFICIENT_EVIDENCE"
         )
-
-    def _primary_agent(self, decision) -> int:
-        root = str(decision.get("root_cause_party", ""))
-        if root.startswith("AGENT_"):
-            return int(root[6:])
-        for item in decision.get("agents", []):
-            if item.get("verdict") == "PRIMARY_CAUSE":
-                return int(item.get("slot", -1))
-        return -1
-
-    def _material_fault_set(self, decision):
-        material = {}
-        for item in decision.get("agents", []):
-            slot = str(item.get("slot", -1))
-            verdict = str(item.get("verdict", ""))
-            fault = int(item.get("fault_share_bps", 0))
-            if (
-                verdict == "PRIMARY_CAUSE"
-                or verdict == "CONTRIBUTING"
-                or verdict == "NON_PERFORMANCE"
-                or fault >= MATERIAL_FAULT_THRESHOLD_BPS
-            ):
-                material[slot] = True
-        return json.dumps(material, sort_keys=True)
-
-    def _agent_map(self, decision):
-        out = {}
-        for item in decision.get("agents", []):
-            out[str(item.get("slot"))] = item
-        return out

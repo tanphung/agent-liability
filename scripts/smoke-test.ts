@@ -3,7 +3,6 @@ import {
   loadArtifact,
   loadEnv,
   requireBradbury,
-  writeContract,
   callContract
 } from "./bradbury-utils.js";
 
@@ -11,20 +10,14 @@ const env = loadEnv();
 requireBradbury(env);
 const artifact = loadArtifact();
 
-const deadline = String(Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60);
-
-console.log("Running Testnet Bradbury smoke test without triggering adjudication");
+console.log("Running Testnet Bradbury read-only smoke test");
 console.log(`RPC: ${BRADBURY.rpc}`);
 
-const createOutput = writeContract(artifact.mainContractAddress, "create_case", [
-  "Smoke auth workflow",
-  "https://example.com/spec",
-  "https://example.com/manifest",
-  "Smoke test case only. Do not adjudicate without public evidence.",
-  deadline
-]);
-console.log(createOutput);
-
+const protocolOutput = callContract(artifact.mainContractAddress, "get_protocol_config");
 const countOutput = callContract(artifact.mainContractAddress, "get_case_count");
+const reputationOutput = callContract(artifact.reputationContractAddress, "get_config");
+
+console.log(`Protocol config: ${protocolOutput}`);
 console.log(`Case count: ${countOutput}`);
-console.log("Add-agent and activation smoke steps require funded participant accounts; use the frontend or manual CLI with real agent addresses.");
+console.log(`Reputation config: ${reputationOutput}`);
+console.log("Use the frontend for payable case creation because browser wallet writes include escrow value.");

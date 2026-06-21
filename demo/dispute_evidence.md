@@ -25,8 +25,10 @@ identify the required version and fields.
 ## Suggested Outcome For Demo
 
 - Case outcome: `PARTIAL_SUCCESS`
-- Planning Agent: `PRIMARY_CAUSE`
-- Coding Agent: `CONTRIBUTING`
-- Client refund: material partial refund
-- Agent payout: reduced according to responsibility
+- Root cause party: `AGENT_0`
+- Planning Agent slot 0 verdict: `PRIMARY_CAUSE`
+- Coding Agent slot 1 verdict: `CONTRIBUTING`
+- Planning Agent payout: `0` bps because the deprecated API decision was the primary cause
+- Coding Agent payout: about `2000` bps because it delivered local implementation but missed the integration mismatch
+- Client refund: about `8000` bps
 - Bond slash: larger slash for the planning agent than the coding agent

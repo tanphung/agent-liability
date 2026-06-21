@@ -521,31 +521,27 @@ def test_owner_can_transfer_main_ownership(
             contract.withdraw_protocol_fees(direct_alice, 1)
 
 
-def test_semantic_consensus_accepts_close_material_decisions(
+def test_leader_decision_validation_accepts_canonical_decision(
     direct_deploy, direct_charlie
 ):
     contract = deploy_main(direct_deploy, direct_charlie)
-    leader = valid_decision(refund=6_000, agent_0_payout=0, agent_1_payout=4_000)
-    validator = valid_decision(refund=5_800, agent_0_payout=0, agent_1_payout=4_200)
-    assert contract._compare_material_decisions(leader, validator) is True
+    allocations = json.dumps({"0": 6_000, "1": 4_000}, sort_keys=True)
+    decision = valid_decision(refund=8_000, agent_0_payout=0, agent_1_payout=2_000)
+    assert contract._leader_decision_is_valid(decision, allocations) is True
 
 
-def test_semantic_consensus_rejects_schema_only_false_positive(
+def test_leader_decision_validation_rejects_bad_schema(
     direct_deploy, direct_charlie
 ):
     contract = deploy_main(direct_deploy, direct_charlie)
-    leader = json.loads(valid_decision())
-    validator = json.loads(valid_decision())
-    validator["root_cause_party"] = "AGENT_1"
-    validator["agents"][0]["verdict"] = "CONTRIBUTING"
-    validator["agents"][1]["verdict"] = "PRIMARY_CAUSE"
-    assert contract._compare_material_decisions(json.dumps(leader), json.dumps(validator)) is False
+    allocations = json.dumps({"0": 6_000, "1": 4_000}, sort_keys=True)
+    assert contract._leader_decision_is_valid("not-json", allocations) is False
 
 
-def test_semantic_consensus_rejects_large_refund_disagreement(
+def test_leader_decision_validation_rejects_payout_over_allocation(
     direct_deploy, direct_charlie
 ):
     contract = deploy_main(direct_deploy, direct_charlie)
-    leader = valid_decision(refund=2_000, agent_0_payout=4_000, agent_1_payout=4_000)
-    validator = valid_decision(refund=8_000, agent_0_payout=0, agent_1_payout=2_000)
-    assert contract._compare_material_decisions(leader, validator) is False
+    allocations = json.dumps({"0": 6_000, "1": 4_000}, sort_keys=True)
+    decision = valid_decision(refund=4_000, agent_0_payout=7_000, agent_1_payout=0)
+    assert contract._leader_decision_is_valid(decision, allocations) is False

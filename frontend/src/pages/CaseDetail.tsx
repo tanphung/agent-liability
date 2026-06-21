@@ -103,7 +103,7 @@ export function CaseDetail({
           <p>Case #{summary.case_id}</p>
           <h1>{summary.title}</h1>
           <small>
-            Client {shorten(summary.client)} · Escrow {weiToGen(summary.escrow)} GEN
+            Client {shorten(summary.client)} | Escrow {weiToGen(summary.escrow)} GEN
           </small>
         </div>
         <CaseStatusBadge status={summary.status} />

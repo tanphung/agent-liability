@@ -44,8 +44,8 @@ sequenceDiagram
   UI->>Main: raise_dispute
   UI->>Main: adjudicate_case
   Main->>Web: render URLs inside nondet block
-  Main->>V: exec_prompt and semantic validator rerun
-  V-->>Main: material consensus
+  Main->>V: exec_prompt and deterministic verdict validation
+  V-->>Main: guarded consensus result
   Main->>Main: deterministic settlement
   Main->>Rep: child record_outcome messages
 ```

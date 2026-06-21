@@ -59,7 +59,3 @@ npm run verify:bradbury
 Set-Location -LiteralPath 'D:\app genlayer\AgentLiability\frontend'
 npm run dev
 ```
-
-## Testnet Bradbury Caveat
-
-Testnet Bradbury is temporary. Resetting shared state may invalidate addresses. Redeployment may be required. App configuration must be updated after redeployment. Do not advertise Testnet Bradbury deployment as production deployment.

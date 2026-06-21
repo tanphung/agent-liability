@@ -4,7 +4,7 @@ import { shorten } from "../utils/format";
 
 function transactionHint(phase: TransactionRecord["phase"]): string | null {
   if (phase === "Running GenLayer adjudication" || phase === "Waiting for validator acceptance") {
-    return "GenLayer validators are rendering evidence and running AI consensus. This can take several minutes on Bradbury.";
+    return "GenLayer is processing the AI adjudication and deterministic consensus guard. This can take several minutes on Bradbury.";
   }
   if (phase === "Waiting for finalization") {
     return "The result was accepted and is now waiting for the finality window to close.";

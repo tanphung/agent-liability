@@ -57,7 +57,7 @@ export function Dashboard({
             <button className="case-row" key={item.case_id} onClick={() => onSelectCase(item.case_id)} type="button">
               <span>#{item.case_id}</span>
               <strong>{item.title}</strong>
-              <small>{weiToGen(item.escrow)} GEN · {shorten(item.client)}</small>
+              <small>{weiToGen(item.escrow)} GEN | {shorten(item.client)}</small>
               <CaseStatusBadge status={item.status} />
             </button>
           ))}

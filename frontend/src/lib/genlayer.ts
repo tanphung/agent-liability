@@ -81,10 +81,13 @@ async function runQueuedRead<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: string]: unknown }): boolean {
+  const text = JSON.stringify(receipt).toLowerCase();
+  if (text.includes("nondet_disagree") || text.includes("majority_disagree") || text.includes("undetermined")) {
+    return false;
+  }
   if (receipt.txExecutionResultName) {
     return String(receipt.txExecutionResultName) === "FINISHED_WITH_RETURN";
   }
-  const text = JSON.stringify(receipt).toLowerCase();
   if (text.includes("finished_with_error")) {
     return false;
   }
@@ -108,14 +111,21 @@ function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: st
 
 function executionError(receipt: { txExecutionResultName?: unknown; [key: string]: unknown }): string {
   const txExecutionResult = receipt.txExecutionResultName ?? receipt.execution_result;
-  const transaction = receipt.transaction as { execution_result?: unknown; eq_outputs?: { value?: unknown } } | undefined;
+  const transaction = receipt.transaction as
+    | { execution_result?: unknown; result?: unknown; eq_outputs?: { value?: unknown } }
+    | undefined;
+  const text = JSON.stringify(receipt).toLowerCase();
+  if (text.includes("nondet_disagree") || text.includes("majority_disagree") || text.includes("undetermined")) {
+    return "GenLayer consensus was undetermined because validators did not agree on the nondeterministic result.";
+  }
   const nestedResult = transaction?.execution_result;
+  const consensusResult = transaction?.result;
   const nestedError = transaction?.eq_outputs?.value;
   if (nestedError) {
     return String(nestedError);
   }
-  if (txExecutionResult || nestedResult) {
-    return `Execution result: ${String(txExecutionResult ?? nestedResult)}`;
+  if (txExecutionResult || nestedResult || consensusResult) {
+    return `Execution result: ${String(txExecutionResult ?? nestedResult ?? consensusResult)}`;
   }
   return "Execution failed. Open the transaction in GenExplorer for details.";
 }

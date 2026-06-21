@@ -5,8 +5,8 @@
 Use the live app on GenLayer Testnet Bradbury:
 
 - App: https://agent-liability.vercel.app
-- Main contract: `0x64aFb11e45C12F7ED8FeAA75cfee15192884BdB1`
-- Reputation contract: `0x129088d7909e20E74FC2BC14D7D1f815b529F4DB`
+- Main contract: `0xa700304f08fBbEbCfc3e0BD96F51145A45d1D3d6`
+- Reputation contract: `0xA0c8Db4f2C7661B16cE43C18e0E5571985b9C9f4`
 
 The Create screen includes `Fill Demo Case`, which populates these public evidence URLs:
 
