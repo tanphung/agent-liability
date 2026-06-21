@@ -40,10 +40,8 @@ export function useCases(mainContract: HexAddress | null) {
 }
 
 export async function readCaseBundle(mainContract: HexAddress, caseId: number) {
-  const [summary, agents, decision] = await Promise.all([
-    readJson<CaseSummary>(mainContract, "get_case_summary", [caseId]),
-    readJson<AgentSummary[]>(mainContract, "get_case_agents", [caseId]),
-    readJson<Decision>(mainContract, "get_case_decision", [caseId])
-  ]);
+  const summary = await readJson<CaseSummary>(mainContract, "get_case_summary", [caseId]);
+  const agents = await readJson<AgentSummary[]>(mainContract, "get_case_agents", [caseId]);
+  const decision = await readJson<Decision>(mainContract, "get_case_decision", [caseId]);
   return { summary, agents, decision };
 }

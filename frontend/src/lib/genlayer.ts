@@ -27,6 +27,54 @@ type GenLayerClient = {
 };
 
 const DEFAULT_READ_ACCOUNT = "0x0000000000000000000000000000000000000000" as HexAddress;
+const READ_CALL_SPACING_MS = 900;
+const RATE_LIMIT_RETRY_DELAYS_MS = [1_500, 3_000, 6_000];
+
+let readQueue = Promise.resolve();
+let lastReadCallAt = 0;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function isRateLimitError(error: unknown): boolean {
+  const text = error instanceof Error ? error.message : String(error);
+  return /rate limit|request exceeds defined limit|too many requests/i.test(text);
+}
+
+async function runQueuedRead<T>(operation: () => Promise<T>): Promise<T> {
+  const run = async (): Promise<T> => {
+    for (let attempt = 0; attempt <= RATE_LIMIT_RETRY_DELAYS_MS.length; attempt += 1) {
+      const elapsed = Date.now() - lastReadCallAt;
+      if (elapsed < READ_CALL_SPACING_MS) {
+        await sleep(READ_CALL_SPACING_MS - elapsed);
+      }
+
+      try {
+        const result = await operation();
+        lastReadCallAt = Date.now();
+        return result;
+      } catch (error) {
+        lastReadCallAt = Date.now();
+        const retryDelay = RATE_LIMIT_RETRY_DELAYS_MS[attempt];
+        if (!isRateLimitError(error) || retryDelay === undefined) {
+          throw error;
+        }
+        await sleep(retryDelay);
+      }
+    }
+    throw new Error("Bradbury RPC rate limit exceeded. Please wait a moment and refresh.");
+  };
+
+  const queued = readQueue.then(run, run);
+  readQueue = queued.then(
+    () => undefined,
+    () => undefined
+  );
+  return queued;
+}
 
 function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: string]: unknown }): boolean {
   if (receipt.txExecutionResultName) {
@@ -69,12 +117,14 @@ export async function readJson<T>(
   functionName: string,
   args: unknown[] = []
 ): Promise<T> {
-  const result = await readClient.readContract({
-    address,
-    functionName,
-    args,
-    stateStatus: "accepted"
-  });
+  const result = await runQueuedRead(() =>
+    readClient.readContract({
+      address,
+      functionName,
+      args,
+      stateStatus: "accepted"
+    })
+  );
   if (typeof result !== "string") {
     throw new Error(`${functionName} did not return JSON text`);
   }
@@ -86,12 +136,14 @@ export async function readScalar<T>(
   functionName: string,
   args: unknown[] = []
 ): Promise<T> {
-  return (await readClient.readContract({
-    address,
-    functionName,
-    args,
-    stateStatus: "accepted"
-  })) as T;
+  return (await runQueuedRead(() =>
+    readClient.readContract({
+      address,
+      functionName,
+      args,
+      stateStatus: "accepted"
+    })
+  )) as T;
 }
 
 export async function executeWrite(params: {
