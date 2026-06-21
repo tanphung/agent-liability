@@ -28,6 +28,8 @@ const emptyDraftAgent = (): DraftAgentInput => ({
   bondGen: "0"
 });
 
+const MIN_CONFIGURED_AGENTS = 2;
+
 export function CaseDetail({
   caseId,
   account,
@@ -192,7 +194,7 @@ export function CaseDetail({
       {isSetupCase ? (
         <section className="panel form-panel">
           <h2>Case Setup</h2>
-          {canEditSetup && summary.agent_count < 5 ? (
+          {canEditSetup && summary.agent_count < MIN_CONFIGURED_AGENTS ? (
             <>
               <label>
                 Agent Wallet
@@ -266,6 +268,9 @@ export function CaseDetail({
               Activate Case
             </button>
           </div>
+          {canEditSetup && summary.agent_count >= MIN_CONFIGURED_AGENTS ? (
+            <p className="helper-text">Required agents are configured. Activate the case to continue.</p>
+          ) : null}
           {!canEditSetup ? (
             <p className="helper-text">Only the client wallet {shorten(summary.client)} can delete or activate this case.</p>
           ) : null}
