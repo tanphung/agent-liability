@@ -208,5 +208,11 @@ export function loadArtifact(path = "artifacts/bradbury-deployment.json"): Deplo
 }
 
 export function explorerLink(hashOrAddress: string): string {
-  return `${BRADBURY.explorer}/search?q=${encodeURIComponent(hashOrAddress)}`;
+  if (/^0x[a-fA-F0-9]{64}$/.test(hashOrAddress)) {
+    return `${BRADBURY.explorer}/tx/${hashOrAddress}`;
+  }
+  if (/^0x[a-fA-F0-9]{40}$/.test(hashOrAddress)) {
+    return `${BRADBURY.explorer}/address/${hashOrAddress}`;
+  }
+  return BRADBURY.explorer;
 }

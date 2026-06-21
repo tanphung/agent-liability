@@ -443,7 +443,6 @@ def test_optional_source_unavailable_can_still_settle(
             ),
             "LLM_ERROR",
         ),
-        (valid_decision(refund=7_000, agent_0_payout=0, agent_1_payout=4_000), "LLM_ERROR"),
         (valid_decision(refund=4_000, agent_0_payout=7_000, agent_1_payout=0), "LLM_ERROR"),
     ],
 )
@@ -459,6 +458,30 @@ def test_bad_llm_outputs_do_not_settle(
     direct_vm.mock_llm("AgentLiability", payload)
     with direct_vm.expect_revert(message):
         contract.adjudicate_case(case_id)
+
+
+def test_llm_refund_bps_is_normalized_to_payout_remainder(
+    direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
+):
+    contract = deploy_main(direct_deploy, direct_charlie)
+    case_id = create_case(contract, direct_vm)
+    add_two_agents(contract, case_id, direct_alice, direct_bob)
+    activate_and_accept(contract, case_id, direct_vm, direct_alice, direct_bob)
+    submit_all_evidence(contract, case_id, direct_vm, direct_alice, direct_bob)
+    mock_sources(direct_vm)
+    direct_vm.mock_llm(
+        "AgentLiability",
+        valid_decision(refund=7_000, agent_0_payout=0, agent_1_payout=4_000),
+    )
+    swallow_child_messages(direct_vm)
+    contract.adjudicate_case(case_id)
+
+    summary = json.loads(contract.get_case_summary(case_id))
+    decision = json.loads(contract.get_case_decision(case_id))
+    assert summary["status"] == "DECIDED"
+    assert summary["settled"] is True
+    assert summary["client_refund_bps"] == 6_000
+    assert decision["client_refund_bps"] == 6_000
 
 
 def test_draft_cancellation_and_fee_withdrawal_rules(

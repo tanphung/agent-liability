@@ -84,6 +84,13 @@ function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: st
   if (receipt.txExecutionResultName) {
     return String(receipt.txExecutionResultName) === "FINISHED_WITH_RETURN";
   }
+  const text = JSON.stringify(receipt).toLowerCase();
+  if (text.includes("finished_with_error")) {
+    return false;
+  }
+  if (text.includes("finished_with_return")) {
+    return true;
+  }
   const consensus = receipt.consensus_data as
     | {
         leader_receipt?: Array<{ execution_result?: unknown; genvm_result?: unknown; error?: unknown }>;
@@ -97,6 +104,20 @@ function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: st
     return String(firstLeader.genvm_result).includes("FINISHED_WITH_RETURN");
   }
   return false;
+}
+
+function executionError(receipt: { txExecutionResultName?: unknown; [key: string]: unknown }): string {
+  const txExecutionResult = receipt.txExecutionResultName ?? receipt.execution_result;
+  const transaction = receipt.transaction as { execution_result?: unknown; eq_outputs?: { value?: unknown } } | undefined;
+  const nestedResult = transaction?.execution_result;
+  const nestedError = transaction?.eq_outputs?.value;
+  if (nestedError) {
+    return String(nestedError);
+  }
+  if (txExecutionResult || nestedResult) {
+    return `Execution result: ${String(txExecutionResult ?? nestedResult)}`;
+  }
+  return "Execution failed. Open the transaction in GenExplorer for details.";
 }
 
 export const readClient = createClient({
@@ -194,7 +215,7 @@ export async function waitForSubmittedTransaction(params: {
   const receipt = await readClient.waitForTransactionReceipt({
     hash,
     status: TransactionStatus.FINALIZED,
-    fullTransaction: false,
+    fullTransaction: true,
     interval: WRITE_WAIT_INTERVAL_MS,
     retries: WRITE_WAIT_RETRIES
   });
@@ -238,7 +259,7 @@ export async function waitForSubmittedTransaction(params: {
     trace,
     childTxIds,
     phase: "Execution failed" as const,
-    error: `Execution result: ${String(receipt.txExecutionResultName)}`
+    error: executionError(receipt)
   };
   onUpdate(record);
   throw new Error(record.error);

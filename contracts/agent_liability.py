@@ -375,7 +375,7 @@ class Contract(gl.Contract):
             detail = str(decision.get("error_detail", "adjudication could not settle"))
             raise gl.vm.UserError(f"{code}: {detail}")
 
-        self._settle_case(case_id, decision, decision_json)
+        self._settle_case(case_id, decision, json.dumps(decision, sort_keys=True))
 
     def _auto_accept_and_submit(
         self,
@@ -661,7 +661,7 @@ Rubric:
 1. Evaluate causality, not who produced the final artifact.
 2. Identify upstream wrong assumptions, downstream failure to detect, non-performance, client ambiguity, and insufficient evidence.
 3. Every agent must appear exactly once.
-4. Agent payout bps plus client refund bps must total exactly 10000.
+4. Set client_refund_bps to 10000 minus the sum of all agent payout_bps.
 5. Do not silently punish a party when evidence is insufficient.
 
 CASE_SNAPSHOT:
@@ -749,8 +749,7 @@ CASE_SNAPSHOT:
                     "reason": self._truncate_reason(str(agent_decision.get("reason", ""))),
                 }
             )
-        if total_payout + client_refund != MAX_BPS:
-            raise gl.vm.UserError("payout bps plus refund must equal 10000")
+        client_refund = MAX_BPS - total_payout
         canonical_agents.sort(key=lambda item: item["slot"])
         return {
             "evaluation_error": False,
