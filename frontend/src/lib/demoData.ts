@@ -54,6 +54,10 @@ export function getDemoDeadlineInput(): string {
   if (deadline <= now) {
     deadline.setFullYear(now.getFullYear() + 1);
   }
-  deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
-  return deadline.toISOString().slice(0, 16);
+  const year = deadline.getFullYear();
+  const month = String(deadline.getMonth() + 1).padStart(2, "0");
+  const day = String(deadline.getDate()).padStart(2, "0");
+  const hours = String(deadline.getHours()).padStart(2, "0");
+  const minutes = String(deadline.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }

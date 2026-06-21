@@ -353,8 +353,9 @@ Demo Video: NOT RECORDED
 
 ## Roadmap
 
-- Deploy to Testnet Bradbury through the CLI with a funded account.
-- Add contract schema-driven frontend call generation.
-- Add child transaction polling per payout and reputation message.
-- Add code splitting for the frontend SDK bundle.
-- Add migration support for reputation authorization after Testnet Bradbury resets.
+- Reviewer mode: one-click demo case creation, persistent transaction recovery, and clearer Bradbury validator timing.
+- Evidence workspace: upload-to-public-storage helpers, evidence previews, and source availability checks before signing.
+- Case analytics: verdict history, payout charts, reputation trend lines, and downloadable adjudication reports.
+- Reputation marketplace: searchable agent profiles, past fault patterns, and role-specific reliability scores.
+- Contract operations: migration tooling for Bradbury resets, schema-driven frontend calls, and child transaction polling for payouts and reputation updates.
+- Performance and safety: bundle code splitting, stronger RPC backoff, and richer trace display for failed GenLayer executions.

@@ -21,6 +21,28 @@ const emptyAgent = (): AgentInput => ({
   bondGen: "0"
 });
 
+function parseDeadlineSeconds(input: string): number {
+  const match = input.trim().match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$/);
+  if (!match) {
+    throw new Error("Deadline must use English numeric format YYYY-MM-DD HH:mm");
+  }
+  const [, year, month, day, hours, minutes] = match;
+  const deadline = new Date(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes), 0, 0);
+  if (
+    deadline.getFullYear() !== Number(year) ||
+    deadline.getMonth() !== Number(month) - 1 ||
+    deadline.getDate() !== Number(day) ||
+    deadline.getHours() !== Number(hours) ||
+    deadline.getMinutes() !== Number(minutes)
+  ) {
+    throw new Error("Deadline is not a valid calendar date");
+  }
+  if (deadline <= new Date()) {
+    throw new Error("Deadline must be in the future");
+  }
+  return Math.floor(deadline.getTime() / 1000);
+}
+
 export function CreateCase({
   account,
   mainContract,
@@ -65,7 +87,7 @@ export function CreateCase({
     setPendingHash(null);
     try {
       const beforeCount = Number(await readScalar<bigint | number>(mainContract, "get_case_count"));
-      const deadlineSeconds = Math.floor(new Date(deadline).getTime() / 1000);
+      const deadlineSeconds = parseDeadlineSeconds(deadline);
       const [agent0, agent1] = agents;
       await executeWrite({
         account,
@@ -127,76 +149,94 @@ export function CreateCase({
           {pendingHash ? <span> Transaction {pendingHash.slice(0, 8)}...{pendingHash.slice(-6)}</span> : null}
         </div>
       ) : null}
-      <label>
-        Title
-        <input value={title} onChange={(event) => setTitle(event.target.value)} />
-      </label>
-      <label>
-        Specification URL
-        <input value={specUrl} onChange={(event) => setSpecUrl(event.target.value)} />
-      </label>
-      <label>
-        Workflow Manifest URL
-        <input value={manifestUrl} onChange={(event) => setManifestUrl(event.target.value)} />
-      </label>
-      <label>
-        Acceptance Criteria
-        <textarea value={criteria} onChange={(event) => setCriteria(event.target.value)} />
-      </label>
-      <div className="form-grid">
+      <div className="form-section">
+        <h3>Case Evidence</h3>
         <label>
-          Deadline
-          <input type="datetime-local" value={deadline} onChange={(event) => setDeadline(event.target.value)} />
+          Title
+          <input value={title} onChange={(event) => setTitle(event.target.value)} />
         </label>
         <label>
-          Escrow GEN
-          <input value={escrowGen} onChange={(event) => setEscrowGen(event.target.value)} />
+          Specification URL
+          <input value={specUrl} onChange={(event) => setSpecUrl(event.target.value)} />
+        </label>
+        <label>
+          Workflow Manifest URL
+          <input value={manifestUrl} onChange={(event) => setManifestUrl(event.target.value)} />
+        </label>
+        <label>
+          Acceptance Criteria
+          <textarea value={criteria} onChange={(event) => setCriteria(event.target.value)} />
         </label>
       </div>
-      <div className="agent-inputs">
-        {agents.slice(0, 2).map((agent, index) => (
-          <fieldset key={index}>
-            <legend>Agent {index}</legend>
+
+      <div className="form-section">
+        <h3>Settlement Terms</h3>
+        <div className="form-grid">
+          <label>
+            Deadline
             <input
-              placeholder="Wallet address"
-              value={agent.wallet}
-              onChange={(event) =>
-                setAgents((items) =>
-                  items.map((item, idx) => (idx === index ? { ...item, wallet: event.target.value } : item))
-                )
-              }
+              inputMode="numeric"
+              placeholder="2026-09-30 23:59"
+              value={deadline}
+              onChange={(event) => setDeadline(event.target.value)}
             />
-            <input
-              placeholder="Role"
-              value={agent.role}
-              onChange={(event) =>
-                setAgents((items) =>
-                  items.map((item, idx) => (idx === index ? { ...item, role: event.target.value } : item))
-                )
-              }
-            />
-            <input
-              placeholder="Scope URL"
-              value={agent.scopeUrl}
-              onChange={(event) =>
-                setAgents((items) =>
-                  items.map((item, idx) => (idx === index ? { ...item, scopeUrl: event.target.value } : item))
-                )
-              }
-            />
-            <input
-              placeholder="Allocation %"
-              value={agent.allocationPercent}
-              onChange={(event) =>
-                setAgents((items) =>
-                  items.map((item, idx) =>
-                    idx === index ? { ...item, allocationPercent: event.target.value } : item
+            <span className="field-note">Use English numeric format: YYYY-MM-DD HH:mm, local time.</span>
+          </label>
+          <label>
+            Escrow GEN
+            <input value={escrowGen} onChange={(event) => setEscrowGen(event.target.value)} />
+            <span className="field-note">Demo escrow is 0.2 GEN on Testnet Bradbury.</span>
+          </label>
+        </div>
+      </div>
+
+      <div className="form-section">
+        <h3>Workflow Agents</h3>
+        <div className="agent-inputs">
+          {agents.slice(0, 2).map((agent, index) => (
+            <fieldset key={index}>
+              <legend>Agent {index}</legend>
+              <input
+                placeholder="Wallet address"
+                value={agent.wallet}
+                onChange={(event) =>
+                  setAgents((items) =>
+                    items.map((item, idx) => (idx === index ? { ...item, wallet: event.target.value } : item))
                   )
-                )
-              }
-            />
-          </fieldset>
-        ))}
+                }
+              />
+              <input
+                placeholder="Role"
+                value={agent.role}
+                onChange={(event) =>
+                  setAgents((items) =>
+                    items.map((item, idx) => (idx === index ? { ...item, role: event.target.value } : item))
+                  )
+                }
+              />
+              <input
+                placeholder="Scope URL"
+                value={agent.scopeUrl}
+                onChange={(event) =>
+                  setAgents((items) =>
+                    items.map((item, idx) => (idx === index ? { ...item, scopeUrl: event.target.value } : item))
+                  )
+                }
+              />
+              <input
+                placeholder="Allocation %"
+                value={agent.allocationPercent}
+                onChange={(event) =>
+                  setAgents((items) =>
+                    items.map((item, idx) =>
+                      idx === index ? { ...item, allocationPercent: event.target.value } : item
+                    )
+                  )
+                }
+              />
+            </fieldset>
+          ))}
+        </div>
       </div>
       <div className="button-row">
         <button className="button primary" disabled={!canSubmit} onClick={() => void submit()} type="button">
