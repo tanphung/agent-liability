@@ -12,6 +12,10 @@ function transactionHint(phase: TransactionRecord["phase"]): string | null {
   return null;
 }
 
+function transactionUrl(explorerUrl: string, hash: string): string {
+  return `${explorerUrl.replace(/\/$/, "")}/tx/${hash}`;
+}
+
 export function TransactionTracker({
   transactions,
   explorerUrl
@@ -38,7 +42,7 @@ export function TransactionTracker({
             ) : null}
           </div>
           {tx.hash ? (
-            <a href={`${explorerUrl}/search?q=${tx.hash}`} target="_blank" rel="noreferrer" title="Open explorer">
+            <a href={transactionUrl(explorerUrl, tx.hash)} target="_blank" rel="noreferrer" title="Open transaction in GenExplorer">
               {shorten(tx.hash, 4)}
               <ExternalLink size={14} />
             </a>

@@ -12,7 +12,7 @@ AgentLiability is a GenLayer Testnet Bradbury dApp where a client creates a case
 
 ## Current Bradbury Status
 
-- App: https://agent-liability.vercel.app
+- App: https://agent-liability.vercel.app/
 - Network: GenLayer Testnet Bradbury
 - Main contract: `0xD39e708006b869Aef4E6F69cAeA112518A2E3D3e`
 - Reputation contract: `0x3FB36151a248238b0abCD229E225869296F8A75A`
@@ -39,26 +39,26 @@ If web access and AI consensus are removed, AgentLiability can no longer decide 
 ```mermaid
 flowchart TD
   Client["Client"] --> UI["React + GenLayerJS frontend"]
-  Agent["AI agents"] --> UI
+  UI --> Evidence["Public demo evidence URLs"]
   UI --> Main["AgentLiability Intelligent Contract"]
-  Main --> Web["Public evidence URLs"]
+  Main --> Web["Rendered public evidence"]
   Main --> LLM["GenLayer validator LLMs"]
   LLM --> Consensus["Semantic consensus"]
-  Consensus --> Settlement["Deterministic payout and slashing"]
+  Consensus --> Settlement["Deterministic settlement"]
   Settlement --> Reputation["AgentReputation contract"]
-  Settlement --> Wallets["Client and agent wallets"]
+  Settlement --> Wallets["Client wallet"]
 ```
 
 ## Contract Responsibilities
 
 Main Contract: `contracts/agent_liability.py`
 
-- Case lifecycle: `DRAFT`, `FUNDING`, `ACTIVE`, `DISPUTED`, `DECIDED`, `CANCELLED`.
-- Escrow and agent bond accounting in wei.
-- Evidence and dispute submission.
+- Case lifecycle and one-transaction demo adjudication.
+- Escrow accounting and optional agent bond accounting in wei.
+- Evidence, dispute, and auto-filled demo submission.
 - Web evidence rendering and LLM adjudication.
 - Semantic consensus comparison.
-- Payout, refund, bond slashing, fee accounting.
+- Payout, refund, optional bond slashing, fee accounting.
 - Reputation child messages.
 - Double-settlement prevention.
 
@@ -88,19 +88,22 @@ Storage Sanity Contract: `contracts/storage_test.py`
 
 ## Case State Machine
 
+The reviewer demo uses the one-signature path. The client signs `create_and_adjudicate_case`,
+then Bradbury validators render the evidence and execute AI consensus before the final case is
+read back from chain.
+
 ```mermaid
 stateDiagram-v2
-  [*] --> DRAFT
-  DRAFT --> FUNDING: activate_case
-  DRAFT --> CANCELLED: cancel_draft
-  DRAFT --> DECIDED: create_and_adjudicate_case
-  FUNDING --> ACTIVE: all agents accept
-  ACTIVE --> DISPUTED: raise_dispute
-  DISPUTED --> DECIDED: adjudicate_case
-  ACTIVE --> DECIDED: adjudicate_case after evidence/deadline rules
-  CANCELLED --> [*]
+  [*] --> SIGNED: client signs create_and_adjudicate_case
+  SIGNED --> VALIDATING: Bradbury validator consensus
+  VALIDATING --> DECIDED: verdict accepted on-chain
+  VALIDATING --> FAILED: execution error
   DECIDED --> [*]
+  FAILED --> [*]
 ```
+
+The contract still keeps advanced manual lifecycle methods for future workflows, but the live
+dApp is wired to the one-signature adjudication path.
 
 ## Evidence Sources
 
@@ -180,9 +183,11 @@ client_refund = base_refund + dust + slashed_bonds
 
 The contract requires total payout bps plus client refund bps to equal exactly `10000`.
 
-## Bond Slashing
+## Optional Bond Accounting
 
-Each agent pays the exact required bond before the case enters `ACTIVE`. At settlement:
+The live demo sets agent required bonds to `0` so reviewers do not need extra agent wallets.
+For future manual workflows, each agent can pay an exact required bond before settlement. When
+bonds are used:
 
 ```text
 bond_slash = bond_paid * bond_slash_bps / 10000
@@ -237,12 +242,38 @@ Testnet Bradbury is a public testnet. Contract addresses can become obsolete aft
 ## Folder Structure
 
 ```text
-contracts/
-frontend/
-tests/
-scripts/
-docs/
 artifacts/
+  bradbury-deployment.json
+contracts/
+  agent_liability.py
+  agent_reputation.py
+  storage_test.py
+demo/
+  specification.md
+  workflow_manifest.json
+  *_agent_scope.md
+  *_deliverable.md
+  dispute_evidence.md
+docs/
+  ARCHITECTURE.md
+  BRADBURY_DEPLOYMENT.md
+  CONSENSUS_DESIGN.md
+  DEMO_SCRIPT.md
+  GENVM_TROUBLESHOOTING.md
+  SECURITY.md
+frontend/
+  src/
+    components/
+    hooks/
+    lib/
+    pages/
+    types/
+    utils/
+scripts/
+tests/
+  direct/
+  fixtures/
+  integration/
 ```
 
 ## Installation
@@ -336,12 +367,6 @@ VITE_REPUTATION_CONTRACT_ADDRESS=0x3FB36151a248238b0abCD229E225869296F8A75A
 Storage Test Contract: `0x93231fF5b1B6449D4e69dF7483D851B712723DB8`
 Main Contract: `0xD39e708006b869Aef4E6F69cAeA112518A2E3D3e`
 Reputation Contract: `0x3FB36151a248238b0abCD229E225869296F8A75A`
-```
-
-## Demo Video
-
-```text
-Demo Video: NOT RECORDED
 ```
 
 ## Known Limitations
