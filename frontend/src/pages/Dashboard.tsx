@@ -4,7 +4,10 @@ import { EmptyState } from "../components/EmptyState";
 import { LoadingSkeleton } from "../components/LoadingSkeleton";
 import { useCases } from "../hooks/useCases";
 import type { HexAddress } from "../types/contracts";
+import { getStatusLabel } from "../utils/statusDisplay";
 import { shorten, weiToGen } from "../utils/format";
+
+const DASHBOARD_STATUSES = ["DRAFT", "FUNDING", "ACTIVE", "DISPUTED", "DECIDED"];
 
 export function Dashboard({
   mainContract,
@@ -36,9 +39,9 @@ export function Dashboard({
           <span>Recent live cases</span>
           <strong>{caseCount}</strong>
         </div>
-        {["DRAFT", "FUNDING", "ACTIVE", "DISPUTED", "DECIDED"].map((status) => (
+        {DASHBOARD_STATUSES.map((status) => (
           <div key={status}>
-            <span>{status}</span>
+            <span>{getStatusLabel(status)}</span>
             <strong>{counts[status] ?? 0}</strong>
           </div>
         ))}

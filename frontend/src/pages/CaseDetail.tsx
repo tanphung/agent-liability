@@ -120,12 +120,12 @@ export function CaseDetail({
       return;
     }
     const confirmed = window.confirm(
-      "Delete this draft case? This sends a Bradbury transaction that cancels the draft and hides it from the live case list after finalization."
+      "Delete this case? This sends a Bradbury transaction that cancels it and hides it from the live case list after finalization."
     );
     if (!confirmed) {
       return;
     }
-    await write("cancel_draft", [summary.case_id], "Delete draft case");
+    await write("cancel_draft", [summary.case_id], "Delete case");
   }
 
   if (caseId === null) {
@@ -182,7 +182,7 @@ export function CaseDetail({
 
       {canEditDraft ? (
         <section className="panel form-panel">
-          <h2>Draft Setup</h2>
+          <h2>Case Setup</h2>
           {summary.agent_count < 5 ? (
             <>
               <label>
