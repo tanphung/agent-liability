@@ -115,6 +115,19 @@ export function CaseDetail({
     });
   }
 
+  async function deleteDraftCase() {
+    if (!summary) {
+      return;
+    }
+    const confirmed = window.confirm(
+      "Delete this draft case? This sends a Bradbury transaction that cancels the draft and hides it from the live case list after finalization."
+    );
+    if (!confirmed) {
+      return;
+    }
+    await write("cancel_draft", [summary.case_id], "Delete draft case");
+  }
+
   if (caseId === null) {
     return <section className="panel">Select a case</section>;
   }
@@ -225,12 +238,12 @@ export function CaseDetail({
           ) : null}
           <div className="button-row">
             <button
-              className="button secondary"
-              onClick={() => void write("cancel_draft", [summary.case_id], "Cancel draft")}
+              className="button danger"
+              onClick={() => void deleteDraftCase()}
               type="button"
             >
               <Trash2 size={18} />
-              Cancel Draft
+              Delete Case
             </button>
             <button
               className="button primary"

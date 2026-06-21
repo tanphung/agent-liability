@@ -119,6 +119,12 @@ a {
   background: #252b35;
 }
 
+.button.danger {
+  border-color: rgba(255, 112, 112, 0.7);
+  background: #4b1f28;
+  color: #ffe1e1;
+}
+
 .icon-button {
   width: 40px;
   padding: 0;
