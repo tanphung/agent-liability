@@ -16,7 +16,7 @@ export const DEMO_CASE = {
   manifestUrl: `${RAW_DEMO_BASE}/workflow_manifest.json`,
   acceptanceCriteria:
     "The agents must deliver a working authentication workflow, document assumptions, and verify public evidence before final settlement.",
-  escrowGen: "1"
+  escrowGen: "0.2"
 };
 
 export const DEMO_AGENTS: DemoAgent[] = [
@@ -46,9 +46,12 @@ export function getDemoAgent(slot: number): DemoAgent {
   return DEMO_AGENTS[Math.min(slot, DEMO_AGENTS.length - 1)];
 }
 
-export function getDemoDeadlineInput(daysFromNow = 7): string {
-  const deadline = new Date();
-  deadline.setDate(deadline.getDate() + daysFromNow);
+export function getDemoDeadlineInput(): string {
+  const now = new Date();
+  const deadline = new Date(now.getFullYear(), 8, 30, 23, 59, 0, 0);
+  if (deadline <= now) {
+    deadline.setFullYear(now.getFullYear() + 1);
+  }
   deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
   return deadline.toISOString().slice(0, 16);
 }

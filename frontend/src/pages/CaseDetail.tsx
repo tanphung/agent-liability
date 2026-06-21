@@ -141,7 +141,8 @@ export function CaseDetail({
   const myAgent = account ? agents.find((agent) => agent.agent.toLowerCase() === account.toLowerCase()) : undefined;
   const canAdjudicate = account && (summary.client.toLowerCase() === account.toLowerCase() || myAgent);
   const isClient = account ? summary.client.toLowerCase() === account.toLowerCase() : false;
-  const canEditDraft = isClient && summary.status === "DRAFT";
+  const isSetupCase = summary.status === "DRAFT";
+  const canEditSetup = isClient && isSetupCase;
   const canPayBond = Boolean(myAgent && summary.status === "FUNDING");
   const canSubmitEvidence = Boolean(myAgent && (summary.status === "ACTIVE" || summary.status === "DISPUTED"));
   const canManageDispute = Boolean(canAdjudicate && (summary.status === "ACTIVE" || summary.status === "DISPUTED"));
@@ -180,10 +181,10 @@ export function CaseDetail({
         ))}
       </section>
 
-      {canEditDraft ? (
+      {isSetupCase ? (
         <section className="panel form-panel">
           <h2>Case Setup</h2>
-          {summary.agent_count < 5 ? (
+          {canEditSetup && summary.agent_count < 5 ? (
             <>
               <label>
                 Agent Wallet
@@ -239,7 +240,9 @@ export function CaseDetail({
           <div className="button-row">
             <button
               className="button danger"
+              disabled={!canEditSetup}
               onClick={() => void deleteDraftCase()}
+              title={canEditSetup ? "Delete case" : "Connect the client wallet to delete this case"}
               type="button"
             >
               <Trash2 size={18} />
@@ -247,8 +250,9 @@ export function CaseDetail({
             </button>
             <button
               className="button primary"
-              disabled={summary.agent_count < 2}
+              disabled={!canEditSetup || summary.agent_count < 2}
               onClick={() => void write("activate_case", [summary.case_id], "Activate case")}
+              title={canEditSetup ? "Activate case" : "Connect the client wallet to activate this case"}
               type="button"
             >
               <Upload size={18} />
