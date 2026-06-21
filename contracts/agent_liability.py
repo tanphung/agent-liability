@@ -701,8 +701,8 @@ CASE_SNAPSHOT:
                 "error_detail": self._truncate_reason(str(decision.get("error_detail", ""))),
             }
 
-        outcome = str(decision.get("case_outcome", ""))
-        root = str(decision.get("root_cause_party", ""))
+        outcome = self._normalize_outcome(str(decision.get("case_outcome", "")))
+        root = self._normalize_root(str(decision.get("root_cause_party", "")), agent_count)
         if not self._allowed_outcome(outcome):
             raise gl.vm.UserError("unknown case outcome")
         if not self._allowed_root(root, agent_count):
@@ -730,7 +730,7 @@ CASE_SNAPSHOT:
             if seen.get(slot_key, False):
                 raise gl.vm.UserError("duplicate agent slot")
             seen[slot_key] = True
-            verdict = str(agent_decision.get("verdict", ""))
+            verdict = self._normalize_verdict(str(agent_decision.get("verdict", "")))
             if not self._allowed_verdict(verdict):
                 raise gl.vm.UserError("unknown agent verdict")
             fault = self._require_int_bps(agent_decision.get("fault_share_bps"), "fault_share_bps")
@@ -1017,6 +1017,68 @@ CASE_SNAPSHOT:
             raise gl.vm.UserError(f"{label} must be integer")
         if value < minimum or value > maximum:
             raise gl.vm.UserError(f"{label} out of range")
+        return value
+
+    def _normalize_enum_text(self, value: str) -> str:
+        out = ""
+        previous_was_separator = False
+        for char in value.strip().upper():
+            if char >= "A" and char <= "Z" or char >= "0" and char <= "9":
+                out += char
+                previous_was_separator = False
+            else:
+                if not previous_was_separator:
+                    out += "_"
+                previous_was_separator = True
+        while out.startswith("_"):
+            out = out[1:]
+        while out.endswith("_"):
+            out = out[:-1]
+        return out
+
+    def _normalize_outcome(self, outcome: str) -> str:
+        value = self._normalize_enum_text(outcome)
+        if value == "PARTIAL" or value == "PARTIALLY_SUCCESSFUL":
+            return "PARTIAL_SUCCESS"
+        if value == "FAILURE":
+            return "FAILED"
+        if value == "NOT_ENOUGH_EVIDENCE" or value == "UNKNOWN":
+            return "INSUFFICIENT_EVIDENCE"
+        return value
+
+    def _normalize_root(self, root: str, agent_count: int) -> str:
+        value = self._normalize_enum_text(root)
+        if self._allowed_root(value, agent_count):
+            return value
+        if value == "BOTH" or value == "MULTIPLE_AGENTS" or value == "MIXED":
+            return "SHARED"
+        if value == "CUSTOMER" or value == "USER":
+            return "CLIENT"
+        if value == "UNKNOWN" or value == "NOT_ENOUGH_EVIDENCE":
+            return "INSUFFICIENT_EVIDENCE"
+        if "PLANNING" in value or "PLANNER" in value or value == "PLAN_AGENT":
+            if agent_count > 0:
+                return "AGENT_0"
+        if "CODING" in value or "CODER" in value or "IMPLEMENT" in value:
+            if agent_count > 1:
+                return "AGENT_1"
+        for i in range(agent_count):
+            if value == f"AGENT{i}" or value == f"AGENT_SLOT_{i}" or value == f"SLOT_{i}":
+                return f"AGENT_{i}"
+        return value
+
+    def _normalize_verdict(self, verdict: str) -> str:
+        value = self._normalize_enum_text(verdict)
+        if value == "PRIMARY" or value == "ROOT_CAUSE" or value == "MAIN_CAUSE":
+            return "PRIMARY_CAUSE"
+        if value == "PARTIAL_FAULT" or value == "CONTRIBUTOR" or value == "PARTLY_RESPONSIBLE":
+            return "CONTRIBUTING"
+        if value == "NO_FAULT" or value == "NOT_RESPONSIBLE":
+            return "NOT_AT_FAULT"
+        if value == "NO_PERFORMANCE" or value == "DID_NOT_PERFORM":
+            return "NON_PERFORMANCE"
+        if value == "UNKNOWN" or value == "NOT_ENOUGH_EVIDENCE":
+            return "INSUFFICIENT_EVIDENCE"
         return value
 
     def _allowed_outcome(self, outcome: str) -> bool:

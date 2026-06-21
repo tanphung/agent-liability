@@ -21,6 +21,8 @@ type GenLayerClient = {
     hash: HexAddress;
     status: unknown;
     fullTransaction?: boolean;
+    interval?: number;
+    retries?: number;
   }) => Promise<{ txExecutionResultName?: unknown; [key: string]: unknown }>;
   getTriggeredTransactionIds?: (input: { hash: HexAddress }) => Promise<HexAddress[]>;
   debugTraceTransaction?: (input: { hash: HexAddress; round?: number }) => Promise<unknown>;
@@ -29,6 +31,8 @@ type GenLayerClient = {
 const DEFAULT_READ_ACCOUNT = "0x0000000000000000000000000000000000000000" as HexAddress;
 const READ_CALL_SPACING_MS = 900;
 const RATE_LIMIT_RETRY_DELAYS_MS = [1_500, 3_000, 6_000];
+const WRITE_WAIT_INTERVAL_MS = 5_000;
+const WRITE_WAIT_RETRIES = 240;
 
 let readQueue = Promise.resolve();
 let lastReadCallAt = 0;
@@ -165,11 +169,14 @@ export async function executeWrite(params: {
     value: params.value ?? 0n
   });
   params.onUpdate({ id, label: params.label, hash, phase: "Submitted" });
+  params.onUpdate({ id, label: params.label, hash, phase: "Running GenLayer adjudication" });
   params.onUpdate({ id, label: params.label, hash, phase: "Waiting for validator acceptance" });
   await readClient.waitForTransactionReceipt({
     hash,
     status: TransactionStatus.ACCEPTED,
-    fullTransaction: false
+    fullTransaction: false,
+    interval: WRITE_WAIT_INTERVAL_MS,
+    retries: WRITE_WAIT_RETRIES
   });
   params.onUpdate({ id, label: params.label, hash, phase: "Accepted" });
   params.onUpdate({ id, label: params.label, hash, phase: "Appeal window" });
@@ -177,7 +184,9 @@ export async function executeWrite(params: {
   const receipt = await readClient.waitForTransactionReceipt({
     hash,
     status: TransactionStatus.FINALIZED,
-    fullTransaction: false
+    fullTransaction: false,
+    interval: WRITE_WAIT_INTERVAL_MS,
+    retries: WRITE_WAIT_RETRIES
   });
   params.onUpdate({ id, label: params.label, hash, receipt, phase: "Finalized" });
 

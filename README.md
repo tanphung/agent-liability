@@ -14,8 +14,8 @@ AgentLiability is a GenLayer Testnet Bradbury dApp where a client creates a case
 
 - App: https://agent-liability.vercel.app
 - Network: GenLayer Testnet Bradbury
-- Main contract: `0x4dDF0e92f997Ec31ef0BD49926Be04a8Ef1cF38C`
-- Reputation contract: `0x82ee20D3eE9f35C3E092Ac5C3711A7B46593fc5A`
+- Main contract: `0xD39e708006b869Aef4E6F69cAeA112518A2E3D3e`
+- Reputation contract: `0x3FB36151a248238b0abCD229E225869296F8A75A`
 - Owner: `0xf8916c192f28B3A6f5e4B731ba85f7c38fAb0eA3`
 - Deployment artifact: `artifacts/bradbury-deployment.json`
 
@@ -326,16 +326,16 @@ OWNER_ADDRESS=0xf8916c192f28b3a6f5e4b731ba85f7c38fab0ea3
 Frontend `.env`:
 
 ```env
-VITE_MAIN_CONTRACT_ADDRESS=0x4dDF0e92f997Ec31ef0BD49926Be04a8Ef1cF38C
-VITE_REPUTATION_CONTRACT_ADDRESS=0x82ee20D3eE9f35C3E092Ac5C3711A7B46593fc5A
+VITE_MAIN_CONTRACT_ADDRESS=0xD39e708006b869Aef4E6F69cAeA112518A2E3D3e
+VITE_REPUTATION_CONTRACT_ADDRESS=0x3FB36151a248238b0abCD229E225869296F8A75A
 ```
 
 ## Deployment Addresses
 
 ```text
 Storage Test Contract: `0x93231fF5b1B6449D4e69dF7483D851B712723DB8`
-Main Contract: `0x4dDF0e92f997Ec31ef0BD49926Be04a8Ef1cF38C`
-Reputation Contract: `0x82ee20D3eE9f35C3E092Ac5C3711A7B46593fc5A`
+Main Contract: `0xD39e708006b869Aef4E6F69cAeA112518A2E3D3e`
+Reputation Contract: `0x3FB36151a248238b0abCD229E225869296F8A75A`
 ```
 
 ## Demo Video

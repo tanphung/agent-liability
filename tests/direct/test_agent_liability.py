@@ -319,6 +319,50 @@ def test_create_and_adjudicate_single_transaction(
     assert decision["case_outcome"] == "PARTIAL_SUCCESS"
 
 
+def test_create_and_adjudicate_normalizes_llm_aliases(
+    direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
+):
+    contract = deploy_main(direct_deploy, direct_charlie)
+    mock_sources(direct_vm)
+    decision = json.loads(valid_decision())
+    decision["case_outcome"] = "partial success"
+    decision["root_cause_party"] = "Planning Agent"
+    decision["agents"][0]["verdict"] = "primary cause"
+    decision["agents"][1]["verdict"] = "partial fault"
+    direct_vm.mock_llm("AgentLiability", json.dumps(decision))
+    swallow_child_messages(direct_vm)
+    direct_vm.value = ESCROW
+    case_id = contract.create_and_adjudicate_case(
+        "Authentication module",
+        "https://example.com/spec",
+        "https://example.com/manifest",
+        "Build auth against the public API version named in the spec.",
+        DEADLINE,
+        direct_alice,
+        "Planning Agent",
+        "https://example.com/scope-planning",
+        6_000,
+        "https://example.com/planning-report",
+        "Selected API v1 after reading stale docs.",
+        direct_bob,
+        "Coding Agent",
+        "https://example.com/scope-coding",
+        4_000,
+        "https://example.com/coding-pr",
+        "Implemented the plan but integration failed.",
+        "integration failed",
+        "https://example.com/dispute",
+    )
+    direct_vm.value = 0
+
+    summary = json.loads(contract.get_case_summary(case_id))
+    agents = json.loads(contract.get_case_agents(case_id))
+    assert summary["status"] == "DECIDED"
+    assert summary["root_cause"] == "AGENT_0"
+    assert agents[0]["verdict"] == "PRIMARY_CAUSE"
+    assert agents[1]["verdict"] == "CONTRIBUTING"
+
+
 def test_critical_source_unavailable_prevents_settlement(
     direct_vm, direct_deploy, direct_alice, direct_bob, direct_charlie
 ):

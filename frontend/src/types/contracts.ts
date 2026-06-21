@@ -66,6 +66,7 @@ export type Reputation = {
 export type TransactionPhase =
   | "Awaiting wallet signature"
   | "Submitted"
+  | "Running GenLayer adjudication"
   | "Waiting for validator acceptance"
   | "Accepted"
   | "Appeal window"
