@@ -2,6 +2,16 @@ import { ExternalLink } from "lucide-react";
 import type { TransactionRecord } from "../types/contracts";
 import { shorten } from "../utils/format";
 
+function transactionHint(phase: TransactionRecord["phase"]): string | null {
+  if (phase === "Running GenLayer adjudication" || phase === "Waiting for validator acceptance") {
+    return "GenLayer validators are rendering evidence and running AI consensus. This can take several minutes on Bradbury.";
+  }
+  if (phase === "Waiting for finalization") {
+    return "The result was accepted and is now waiting for the finality window to close.";
+  }
+  return null;
+}
+
 export function TransactionTracker({
   transactions,
   explorerUrl
@@ -21,6 +31,7 @@ export function TransactionTracker({
           <div>
             <strong>{tx.label}</strong>
             <p>{tx.phase}</p>
+            {transactionHint(tx.phase) ? <p>{transactionHint(tx.phase)}</p> : null}
             {tx.error ? <pre>{tx.error}</pre> : null}
             {tx.childTxIds && tx.childTxIds.length > 0 ? (
               <p>Child transactions: {tx.childTxIds.map((id) => shorten(id, 4)).join(", ")}</p>
