@@ -133,6 +133,10 @@ export function CaseDetail({
   const canAdjudicate = account && (summary.client.toLowerCase() === account.toLowerCase() || myAgent);
   const isClient = account ? summary.client.toLowerCase() === account.toLowerCase() : false;
   const canEditDraft = isClient && summary.status === "DRAFT";
+  const canPayBond = Boolean(myAgent && summary.status === "FUNDING");
+  const canSubmitEvidence = Boolean(myAgent && (summary.status === "ACTIVE" || summary.status === "DISPUTED"));
+  const canManageDispute = Boolean(canAdjudicate && (summary.status === "ACTIVE" || summary.status === "DISPUTED"));
+  const showAgentActions = canPayBond || canSubmitEvidence || canManageDispute;
 
   return (
     <section className="page-grid">
@@ -245,81 +249,82 @@ export function CaseDetail({
         </>
       ) : null}
 
-      <section className="panel form-panel">
-        <h2>Agent Actions</h2>
-        {myAgent && summary.status === "FUNDING" ? (
-          <button
-            className="button primary"
-            onClick={() =>
-              void write(
-                "accept_assignment",
-                [summary.case_id],
-                "Accept assignment",
-                BigInt(myAgent.required_bond)
-              )
-            }
-            type="button"
-          >
-            <Upload size={18} />
-            Pay Bond
-          </button>
-        ) : null}
-        {myAgent && (summary.status === "ACTIVE" || summary.status === "DISPUTED") ? (
-          <>
-            <label>
-              Deliverable URL
-              <input value={deliverableUrl} onChange={(event) => setDeliverableUrl(event.target.value)} />
-            </label>
-            <label>
-              Claim Summary
-              <textarea value={claimSummary} onChange={(event) => setClaimSummary(event.target.value)} />
-            </label>
+      {showAgentActions ? (
+        <section className="panel form-panel">
+          <h2>Agent Actions</h2>
+          {myAgent && canPayBond ? (
             <button
               className="button primary"
               onClick={() =>
-                void write("submit_evidence", [summary.case_id, deliverableUrl, claimSummary], "Submit evidence")
+                void write(
+                  "accept_assignment",
+                  [summary.case_id],
+                  "Accept assignment",
+                  BigInt(myAgent.required_bond)
+                )
               }
               type="button"
             >
               <Upload size={18} />
-              Submit Evidence
+              Pay Bond
             </button>
-          </>
-        ) : null}
-        {canAdjudicate && (summary.status === "ACTIVE" || summary.status === "DISPUTED") ? (
-          <>
-            <label>
-              Dispute Reason
-              <textarea value={disputeReason} onChange={(event) => setDisputeReason(event.target.value)} />
-            </label>
-            <label>
-              Dispute Evidence URL
-              <input value={disputeUrl} onChange={(event) => setDisputeUrl(event.target.value)} />
-            </label>
-            <div className="button-row">
-              <button
-                className="button secondary"
-                onClick={() => void write("raise_dispute", [summary.case_id, disputeReason, disputeUrl], "Raise dispute")}
-                type="button"
-              >
-                <AlertOctagon size={18} />
-                Dispute
-              </button>
+          ) : null}
+          {canSubmitEvidence ? (
+            <>
+              <label>
+                Deliverable URL
+                <input value={deliverableUrl} onChange={(event) => setDeliverableUrl(event.target.value)} />
+              </label>
+              <label>
+                Claim Summary
+                <textarea value={claimSummary} onChange={(event) => setClaimSummary(event.target.value)} />
+              </label>
               <button
                 className="button primary"
-                onClick={() => void write("adjudicate_case", [summary.case_id], "Adjudicate")}
+                onClick={() =>
+                  void write("submit_evidence", [summary.case_id, deliverableUrl, claimSummary], "Submit evidence")
+                }
                 type="button"
               >
-                <Gavel size={18} />
-                Adjudicate
+                <Upload size={18} />
+                Submit Evidence
               </button>
-            </div>
-          </>
-        ) : null}
-        <div className="appeal-box">
-          Appeal support unavailable in the installed SDK path; no appeal transaction is exposed.
-        </div>
-      </section>
+            </>
+          ) : null}
+          {canManageDispute ? (
+            <>
+              <label>
+                Dispute Reason
+                <textarea value={disputeReason} onChange={(event) => setDisputeReason(event.target.value)} />
+              </label>
+              <label>
+                Dispute Evidence URL
+                <input value={disputeUrl} onChange={(event) => setDisputeUrl(event.target.value)} />
+              </label>
+              <div className="button-row">
+                <button
+                  className="button secondary"
+                  onClick={() =>
+                    void write("raise_dispute", [summary.case_id, disputeReason, disputeUrl], "Raise dispute")
+                  }
+                  type="button"
+                >
+                  <AlertOctagon size={18} />
+                  Dispute
+                </button>
+                <button
+                  className="button primary"
+                  onClick={() => void write("adjudicate_case", [summary.case_id], "Adjudicate")}
+                  type="button"
+                >
+                  <Gavel size={18} />
+                  Adjudicate
+                </button>
+              </div>
+            </>
+          ) : null}
+        </section>
+      ) : null}
     </section>
   );
 }
