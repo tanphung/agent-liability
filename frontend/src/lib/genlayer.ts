@@ -169,8 +169,18 @@ export async function executeWrite(params: {
     value: params.value ?? 0n
   });
   params.onUpdate({ id, label: params.label, hash, phase: "Submitted" });
-  params.onUpdate({ id, label: params.label, hash, phase: "Running GenLayer adjudication" });
-  params.onUpdate({ id, label: params.label, hash, phase: "Waiting for validator acceptance" });
+  return waitForSubmittedTransaction({ id, label: params.label, hash, onUpdate: params.onUpdate });
+}
+
+export async function waitForSubmittedTransaction(params: {
+  id: string;
+  label: string;
+  hash: HexAddress;
+  onUpdate: (record: TransactionRecord) => void;
+}): Promise<TransactionRecord> {
+  const { id, label, hash, onUpdate } = params;
+  onUpdate({ id, label, hash, phase: "Running GenLayer adjudication" });
+  onUpdate({ id, label, hash, phase: "Waiting for validator acceptance" });
   await readClient.waitForTransactionReceipt({
     hash,
     status: TransactionStatus.ACCEPTED,
@@ -178,9 +188,9 @@ export async function executeWrite(params: {
     interval: WRITE_WAIT_INTERVAL_MS,
     retries: WRITE_WAIT_RETRIES
   });
-  params.onUpdate({ id, label: params.label, hash, phase: "Accepted" });
-  params.onUpdate({ id, label: params.label, hash, phase: "Appeal window" });
-  params.onUpdate({ id, label: params.label, hash, phase: "Waiting for finalization" });
+  onUpdate({ id, label, hash, phase: "Accepted" });
+  onUpdate({ id, label, hash, phase: "Appeal window" });
+  onUpdate({ id, label, hash, phase: "Waiting for finalization" });
   const receipt = await readClient.waitForTransactionReceipt({
     hash,
     status: TransactionStatus.FINALIZED,
@@ -188,7 +198,7 @@ export async function executeWrite(params: {
     interval: WRITE_WAIT_INTERVAL_MS,
     retries: WRITE_WAIT_RETRIES
   });
-  params.onUpdate({ id, label: params.label, hash, receipt, phase: "Finalized" });
+  onUpdate({ id, label, hash, receipt, phase: "Finalized" });
 
   let childTxIds: HexAddress[] = [];
   if (readClient.getTriggeredTransactionIds) {
@@ -202,13 +212,13 @@ export async function executeWrite(params: {
   if (executionSucceeded(receipt)) {
     const record = {
       id,
-      label: params.label,
+      label,
       hash,
       receipt,
       childTxIds,
       phase: "Execution succeeded" as const
     };
-    params.onUpdate(record);
+    onUpdate(record);
     return record;
   }
 
@@ -222,7 +232,7 @@ export async function executeWrite(params: {
   }
   const record = {
     id,
-    label: params.label,
+    label,
     hash,
     receipt,
     trace,
@@ -230,6 +240,6 @@ export async function executeWrite(params: {
     phase: "Execution failed" as const,
     error: `Execution result: ${String(receipt.txExecutionResultName)}`
   };
-  params.onUpdate(record);
+  onUpdate(record);
   throw new Error(record.error);
 }

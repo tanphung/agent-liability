@@ -1,5 +1,5 @@
 import { FilePlus2, LayoutDashboard, Scale } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ContractStatusBanner } from "./components/ContractStatusBanner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { NetworkBadge } from "./components/NetworkBadge";
@@ -7,6 +7,7 @@ import { TransactionTracker } from "./components/TransactionTracker";
 import { WalletButton } from "./components/WalletButton";
 import { useWallet } from "./hooks/useWallet";
 import { readConfig } from "./lib/env";
+import { readScalar, waitForSubmittedTransaction } from "./lib/genlayer";
 import { CaseDetail } from "./pages/CaseDetail";
 import { CreateCase } from "./pages/CreateCase";
 import { Dashboard } from "./pages/Dashboard";
@@ -15,28 +16,93 @@ import type { TransactionRecord } from "./types/contracts";
 
 type Tab = "dashboard" | "create" | "case" | "reputation";
 
+const TRANSACTIONS_STORAGE_KEY = "agentliability.transactions";
+const TERMINAL_PHASES = new Set(["Execution succeeded", "Execution failed"]);
+
+function loadStoredTransactions(): TransactionRecord[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(TRANSACTIONS_STORAGE_KEY) ?? "[]") as TransactionRecord[];
+    return Array.isArray(parsed) ? parsed.slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+}
+
+function storableTransaction(record: TransactionRecord): TransactionRecord {
+  return {
+    id: record.id,
+    label: record.label,
+    hash: record.hash,
+    phase: record.phase,
+    error: record.error,
+    childTxIds: record.childTxIds
+  };
+}
+
 export default function App() {
   const [configVersion, setConfigVersion] = useState(0);
   const config = useMemo(() => readConfig(), [configVersion]);
   const wallet = useWallet();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [caseId, setCaseId] = useState<number | null>(null);
-  const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
+  const [transactions, setTransactions] = useState<TransactionRecord[]>(loadStoredTransactions);
+  const resumedTxIds = useRef(new Set<string>());
 
   function upsertTx(record: TransactionRecord) {
     setTransactions((items) => {
       const existing = items.findIndex((item) => item.id === record.id);
       if (existing === -1) {
-        return [record, ...items].slice(0, 8);
+        return [storableTransaction(record), ...items].slice(0, 8);
       }
       const next = [...items];
-      next[existing] = record;
+      next[existing] = storableTransaction(record);
       return next;
     });
   }
 
   const mainContract = config.ok ? config.mainContractAddress : null;
   const reputationContract = config.ok ? config.reputationContractAddress : null;
+
+  useEffect(() => {
+    window.localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+  }, [transactions]);
+
+  useEffect(() => {
+    if (!mainContract) {
+      return;
+    }
+    for (const tx of transactions) {
+      if (!tx.hash || TERMINAL_PHASES.has(tx.phase) || resumedTxIds.current.has(tx.id)) {
+        continue;
+      }
+      resumedTxIds.current.add(tx.id);
+      void waitForSubmittedTransaction({
+        id: tx.id,
+        label: tx.label,
+        hash: tx.hash,
+        onUpdate: upsertTx
+      })
+        .then(async () => {
+          if (tx.label === "Create case and adjudicate") {
+            const count = Number(await readScalar<bigint | number>(mainContract, "get_case_count"));
+            if (count > 0) {
+              setCaseId(count);
+              setTab("case");
+            }
+          }
+        })
+        .catch((error) => {
+          upsertTx({
+            ...tx,
+            phase: "Execution failed",
+            error: error instanceof Error ? error.message : String(error)
+          });
+        });
+    }
+  }, [mainContract, transactions]);
 
   return (
     <ErrorBoundary>
