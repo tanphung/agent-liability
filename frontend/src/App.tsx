@@ -1,4 +1,4 @@
-import { FilePlus2, LayoutDashboard, Scale } from "lucide-react";
+import { FilePlus2, LayoutDashboard, Map, Scale } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ContractStatusBanner } from "./components/ContractStatusBanner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -12,9 +12,10 @@ import { CaseDetail } from "./pages/CaseDetail";
 import { CreateCase } from "./pages/CreateCase";
 import { Dashboard } from "./pages/Dashboard";
 import { ReputationPage } from "./pages/ReputationPage";
+import { RoadmapPage } from "./pages/RoadmapPage";
 import type { TransactionRecord } from "./types/contracts";
 
-type Tab = "dashboard" | "create" | "case" | "reputation";
+type Tab = "dashboard" | "create" | "case" | "reputation" | "roadmap";
 
 const TRANSACTIONS_STORAGE_KEY = "agentliability.transactions";
 const TERMINAL_PHASES = new Set(["Execution succeeded", "Execution failed"]);
@@ -147,6 +148,10 @@ export default function App() {
               <Scale size={18} />
               Reputation
             </button>
+            <button className={tab === "roadmap" ? "active" : ""} onClick={() => setTab("roadmap")} type="button">
+              <Map size={18} />
+              Roadmap
+            </button>
           </nav>
 
           <div className="content">
@@ -174,6 +179,7 @@ export default function App() {
               <CaseDetail caseId={caseId} account={wallet.account} mainContract={mainContract} onTx={upsertTx} />
             ) : null}
             {tab === "reputation" ? <ReputationPage reputationContract={reputationContract} /> : null}
+            {tab === "roadmap" ? <RoadmapPage /> : null}
           </div>
 
           <TransactionTracker transactions={transactions} explorerUrl={config.explorerUrl} />

@@ -369,13 +369,6 @@ Main Contract: `0x64aFb11e45C12F7ED8FeAA75cfee15192884BdB1`
 Reputation Contract: `0x129088d7909e20E74FC2BC14D7D1f815b529F4DB`
 ```
 
-## Known Limitations
-
-- Testnet Bradbury deploys and writes require funded Bradbury accounts.
-- Testnet Bradbury integration test is gated behind `RUN_BRADBURY_INTEGRATION=1`.
-- `genvm-lint check` validate step may fail on SDK artifact download for the required `v0.2.16` Studio header.
-- Vite reports a large JS chunk because `genlayer-js` and wallet dependencies are bundled.
-
 ## Roadmap
 
 - Reviewer mode: one-click demo case creation, persistent transaction recovery, and clearer Bradbury validator timing.
