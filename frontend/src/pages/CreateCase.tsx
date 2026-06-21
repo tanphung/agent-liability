@@ -40,6 +40,7 @@ export function CreateCase({
   const [escrowGen, setEscrowGen] = useState("0");
   const [agents, setAgents] = useState<AgentInput[]>([emptyAgent(), emptyAgent()]);
   const [error, setError] = useState<string | null>(null);
+  const [pendingHash, setPendingHash] = useState<HexAddress | null>(null);
   const [busy, setBusy] = useState(false);
 
   const disabled = !account || !mainContract || busy;
@@ -61,6 +62,7 @@ export function CreateCase({
     }
     setBusy(true);
     setError(null);
+    setPendingHash(null);
     try {
       const beforeCount = Number(await readScalar<bigint | number>(mainContract, "get_case_count"));
       const deadlineSeconds = Math.floor(new Date(deadline).getTime() / 1000);
@@ -92,7 +94,12 @@ export function CreateCase({
         ],
         value: parseGenToWei(escrowGen),
         label: "Create case and adjudicate",
-        onUpdate: onTx
+        onUpdate: (record) => {
+          onTx(record);
+          if (record.hash) {
+            setPendingHash(record.hash);
+          }
+        }
       });
       const caseId = beforeCount + 1;
       onCreated(caseId);
@@ -113,6 +120,13 @@ export function CreateCase({
         </button>
       </div>
       {error ? <div className="inline-error">{error}</div> : null}
+      {busy ? (
+        <div className="status-banner">
+          GenLayer validators are adjudicating the case. Keep this tab open; the case opens automatically after the
+          transaction succeeds.
+          {pendingHash ? <span> Transaction {pendingHash.slice(0, 8)}...{pendingHash.slice(-6)}</span> : null}
+        </div>
+      ) : null}
       <label>
         Title
         <input value={title} onChange={(event) => setTitle(event.target.value)} />
