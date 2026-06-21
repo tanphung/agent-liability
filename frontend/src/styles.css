@@ -157,6 +157,11 @@ a {
   color: #ffd4d4;
 }
 
+.helper-text {
+  color: #aeb9c5;
+  margin-bottom: 0;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 180px minmax(0, 1fr) minmax(260px, 350px);

@@ -119,6 +119,14 @@ export function CaseDetail({
     if (!summary) {
       return;
     }
+    if (!account) {
+      setError(`Connect the client wallet ${shorten(summary.client)} to delete this case.`);
+      return;
+    }
+    if (summary.client.toLowerCase() !== account.toLowerCase()) {
+      setError(`This case can only be deleted by the client wallet ${shorten(summary.client)}.`);
+      return;
+    }
     const confirmed = window.confirm(
       "Delete this case? This sends a Bradbury transaction that cancels it and hides it from the live case list after finalization."
     );
@@ -240,9 +248,8 @@ export function CaseDetail({
           <div className="button-row">
             <button
               className="button danger"
-              disabled={!canEditSetup}
               onClick={() => void deleteDraftCase()}
-              title={canEditSetup ? "Delete case" : "Connect the client wallet to delete this case"}
+              title={canEditSetup ? "Delete case" : `Only ${shorten(summary.client)} can delete this case`}
               type="button"
             >
               <Trash2 size={18} />
@@ -259,6 +266,9 @@ export function CaseDetail({
               Activate Case
             </button>
           </div>
+          {!canEditSetup ? (
+            <p className="helper-text">Only the client wallet {shorten(summary.client)} can delete or activate this case.</p>
+          ) : null}
         </section>
       ) : null}
 
