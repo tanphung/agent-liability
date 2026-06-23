@@ -530,6 +530,24 @@ def test_leader_decision_validation_accepts_canonical_decision(
     assert contract._leader_decision_is_valid(decision, allocations) is True
 
 
+def test_leader_decision_validation_accepts_return_like_wrappers(
+    direct_deploy, direct_charlie
+):
+    class CalldataResult:
+        def __init__(self, calldata):
+            self.calldata = calldata
+
+    class ValueResult:
+        def __init__(self, value):
+            self.value = value
+
+    contract = deploy_main(direct_deploy, direct_charlie)
+    allocations = json.dumps({"0": 6_000, "1": 4_000}, sort_keys=True)
+    decision = valid_decision(refund=8_000, agent_0_payout=0, agent_1_payout=2_000)
+    assert contract._leader_decision_is_valid(CalldataResult(decision), allocations) is True
+    assert contract._leader_decision_is_valid(ValueResult(decision), allocations) is True
+
+
 def test_leader_decision_validation_rejects_bad_schema(
     direct_deploy, direct_charlie
 ):

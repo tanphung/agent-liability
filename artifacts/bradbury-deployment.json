@@ -2,14 +2,15 @@
   "network": "testnet-bradbury",
   "rpc": "https://rpc-bradbury.genlayer.com",
   "chainId": 4221,
-  "storageTestAddress": "0x2696d1048F2eeF7e20488E1b2b97c7b14adACD92",
-  "reputationContractAddress": "0xA0c8Db4f2C7661B16cE43C18e0E5571985b9C9f4",
-  "mainContractAddress": "0xa700304f08fBbEbCfc3e0BD96F51145A45d1D3d6",
-  "mainDeployTxHash": "0x16369313ec19e0a6a6abbe6a22ad9e0a182c0bd8227e18516b0b92045f1d8f73",
-  "authorizationTxHash": "0x6de089e6c215efe6adff33b227bd66a6b3f306fc15ee93702a9cc7088a005deb",
-  "reputationOwnerTransferTxHash": "0xb0ab83512ef6c30b8cddf851e2bc94d4224980df4de001a2e790cee49dae46d6",
-  "mainOwnerTransferTxHash": "0xf30943011229d049a1962eb772cf11c97cbdbe8173b550d1ab41c38127bff45f",
+  "storageTestAddress": "0xeC0c8aA76fd38365e519AFCaD34F8993Fe6E5eF9",
+  "reputationContractAddress": "0x4d395b59b780165Ea9D47B3aB8788e97Bb623Bfe",
+  "mainContractAddress": "0x6974a21640C10AD13Bde1F6a13502389b5CFf4f4",
+  "reputationDeployTxHash": "0xeb3f271174525621c4a552418d553b4f61bf0120fc5c70a0e54a722f1cc71fa3",
+  "mainDeployTxHash": "0xfc12c113a4ca5e0c2eed26a8e5f24bff582860c9d12115961bde6670ed5f1087",
+  "authorizationTxHash": "0xd91d52711ef61ed66afbbbfd2918ca0ce5baf2d6273ae56e1132eec2cc2f9341",
+  "reputationOwnerTransferTxHash": "0x5e3c433bb4fe262551638610fe7071ffa834e94ab6d039bd85d563229aa7d676",
+  "mainOwnerTransferTxHash": "0xadbbe376525682796aa7d99aee92daba772f50b6a296df0d875a7f5783f46c24",
   "ownerAddress": "0xf8916c192f28b3a6f5e4b731ba85f7c38fab0ea3",
   "protocolFeeBps": 250,
-  "createdAt": "2026-06-21T20:30:00+07:00"
+  "createdAt": "2026-06-23T13:31:53.9338112+07:00"
 }

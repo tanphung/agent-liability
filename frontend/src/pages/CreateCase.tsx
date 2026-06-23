@@ -43,6 +43,17 @@ function parseDeadlineSeconds(input: string): number {
   return Math.floor(deadline.getTime() / 1000);
 }
 
+async function waitForCreatedCaseId(mainContract: HexAddress, beforeCount: number): Promise<number> {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const count = Number(await readScalar<bigint | number>(mainContract, "get_case_count"));
+    if (count > beforeCount) {
+      return count;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 3_000));
+  }
+  throw new Error("Transaction succeeded, but the new case is not readable on-chain yet. Please refresh in a moment.");
+}
+
 export function CreateCase({
   account,
   mainContract,
@@ -123,7 +134,7 @@ export function CreateCase({
           }
         }
       });
-      const caseId = beforeCount + 1;
+      const caseId = await waitForCreatedCaseId(mainContract, beforeCount);
       onCreated(caseId);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

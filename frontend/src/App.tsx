@@ -36,6 +36,7 @@ function storableTransaction(record: TransactionRecord): TransactionRecord {
   return {
     id: record.id,
     label: record.label,
+    contract: record.contract,
     hash: record.hash,
     phase: record.phase,
     error: record.error,
@@ -79,10 +80,14 @@ export default function App() {
       if (!tx.hash || TERMINAL_PHASES.has(tx.phase) || resumedTxIds.current.has(tx.id)) {
         continue;
       }
+      if (tx.contract && tx.contract.toLowerCase() !== mainContract.toLowerCase()) {
+        continue;
+      }
       resumedTxIds.current.add(tx.id);
       void waitForSubmittedTransaction({
         id: tx.id,
         label: tx.label,
+        contract: tx.contract,
         hash: tx.hash,
         onUpdate: upsertTx
       })

@@ -33,6 +33,17 @@ const READ_CALL_SPACING_MS = 900;
 const RATE_LIMIT_RETRY_DELAYS_MS = [1_500, 3_000, 6_000];
 const WRITE_WAIT_INTERVAL_MS = 5_000;
 const WRITE_WAIT_RETRIES = 240;
+const FAILED_RESULT_NAMES = new Set([
+  "DISAGREE",
+  "MAJORITY_DISAGREE",
+  "NONDET_DISAGREE",
+  "TIMEOUT",
+  "DETERMINISTIC_VIOLATION",
+  "NO_MAJORITY",
+  "ERROR",
+  "REVERTED",
+  "UNDETERMINED"
+]);
 
 let readQueue = Promise.resolve();
 let lastReadCallAt = 0;
@@ -85,8 +96,32 @@ function executionSucceeded(receipt: { txExecutionResultName?: unknown; [key: st
   if (text.includes("nondet_disagree") || text.includes("majority_disagree") || text.includes("undetermined")) {
     return false;
   }
+  const resultNameByNumber: Record<string, string> = {
+    "1": "AGREE",
+    "2": "DISAGREE",
+    "3": "TIMEOUT",
+    "4": "DETERMINISTIC_VIOLATION",
+    "5": "NO_MAJORITY",
+    "6": "MAJORITY_AGREE",
+    "7": "MAJORITY_DISAGREE"
+  };
+  const consensusResult =
+    receipt.result_name ??
+    receipt.resultName ??
+    resultNameByNumber[String(receipt.result)] ??
+    (receipt.result as { name?: unknown } | undefined)?.name ??
+    receipt.result;
+  if (typeof consensusResult === "string") {
+    const normalized = consensusResult.toUpperCase();
+    if (FAILED_RESULT_NAMES.has(normalized)) {
+      return false;
+    }
+    if (normalized.includes("AGREE") || normalized.includes("SUCCESS")) {
+      return true;
+    }
+  }
   if (receipt.txExecutionResultName) {
-    return String(receipt.txExecutionResultName) === "FINISHED_WITH_RETURN";
+    return String(receipt.txExecutionResultName).toUpperCase() === "FINISHED_WITH_RETURN";
   }
   if (text.includes("finished_with_error")) {
     return false;
@@ -192,26 +227,27 @@ export async function executeWrite(params: {
 }): Promise<TransactionRecord> {
   const id = `${params.label}-${Date.now()}`;
   const walletClient = createWalletClient(params.account);
-  params.onUpdate({ id, label: params.label, phase: "Awaiting wallet signature" });
+  params.onUpdate({ id, label: params.label, contract: params.contract, phase: "Awaiting wallet signature" });
   const hash = await walletClient.writeContract({
     address: params.contract,
     functionName: params.functionName,
     args: params.args ?? [],
     value: params.value ?? 0n
   });
-  params.onUpdate({ id, label: params.label, hash, phase: "Submitted" });
-  return waitForSubmittedTransaction({ id, label: params.label, hash, onUpdate: params.onUpdate });
+  params.onUpdate({ id, label: params.label, contract: params.contract, hash, phase: "Submitted" });
+  return waitForSubmittedTransaction({ id, label: params.label, contract: params.contract, hash, onUpdate: params.onUpdate });
 }
 
 export async function waitForSubmittedTransaction(params: {
   id: string;
   label: string;
+  contract?: HexAddress;
   hash: HexAddress;
   onUpdate: (record: TransactionRecord) => void;
 }): Promise<TransactionRecord> {
-  const { id, label, hash, onUpdate } = params;
-  onUpdate({ id, label, hash, phase: "Running GenLayer adjudication" });
-  onUpdate({ id, label, hash, phase: "Waiting for validator acceptance" });
+  const { id, label, contract, hash, onUpdate } = params;
+  onUpdate({ id, label, contract, hash, phase: "Running GenLayer adjudication" });
+  onUpdate({ id, label, contract, hash, phase: "Waiting for validator acceptance" });
   await readClient.waitForTransactionReceipt({
     hash,
     status: TransactionStatus.ACCEPTED,
@@ -219,9 +255,9 @@ export async function waitForSubmittedTransaction(params: {
     interval: WRITE_WAIT_INTERVAL_MS,
     retries: WRITE_WAIT_RETRIES
   });
-  onUpdate({ id, label, hash, phase: "Accepted" });
-  onUpdate({ id, label, hash, phase: "Appeal window" });
-  onUpdate({ id, label, hash, phase: "Waiting for finalization" });
+  onUpdate({ id, label, contract, hash, phase: "Accepted" });
+  onUpdate({ id, label, contract, hash, phase: "Appeal window" });
+  onUpdate({ id, label, contract, hash, phase: "Waiting for finalization" });
   const receipt = await readClient.waitForTransactionReceipt({
     hash,
     status: TransactionStatus.FINALIZED,
@@ -229,7 +265,7 @@ export async function waitForSubmittedTransaction(params: {
     interval: WRITE_WAIT_INTERVAL_MS,
     retries: WRITE_WAIT_RETRIES
   });
-  onUpdate({ id, label, hash, receipt, phase: "Finalized" });
+  onUpdate({ id, label, contract, hash, receipt, phase: "Finalized" });
 
   let childTxIds: HexAddress[] = [];
   if (readClient.getTriggeredTransactionIds) {
@@ -244,6 +280,7 @@ export async function waitForSubmittedTransaction(params: {
     const record = {
       id,
       label,
+      contract,
       hash,
       receipt,
       childTxIds,
@@ -264,6 +301,7 @@ export async function waitForSubmittedTransaction(params: {
   const record = {
     id,
     label,
+    contract,
     hash,
     receipt,
     trace,

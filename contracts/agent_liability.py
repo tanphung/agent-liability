@@ -353,9 +353,7 @@ class Contract(gl.Contract):
             return self._evaluate_case_evidence(snapshot_json)
 
         def validator_fn(leaders_res) -> bool:
-            if not isinstance(leaders_res, gl.vm.Return):
-                return False
-            return self._leader_decision_is_valid(leaders_res.calldata, self._agent_allocations_json(case_id))
+            return self._leader_decision_is_valid(leaders_res, self._agent_allocations_json(case_id))
 
         decision_json = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
         decision = self._parse_decision_or_revert(decision_json, self._agent_allocations_json(case_id))
@@ -751,12 +749,19 @@ CASE_SNAPSHOT:
             "agents": canonical_agents,
         }
 
-    def _leader_decision_is_valid(self, leader_json: str, allocations_json: str) -> bool:
+    def _leader_decision_is_valid(self, leader_result, allocations_json: str) -> bool:
         try:
-            self._parse_decision_or_revert(str(leader_json), allocations_json)
+            self._parse_decision_or_revert(str(self._nondet_payload(leader_result)), allocations_json)
             return True
         except Exception:
             return False
+
+    def _nondet_payload(self, result):
+        if hasattr(result, "calldata"):
+            return result.calldata
+        if hasattr(result, "value"):
+            return result.value
+        return result
 
     def _build_case_snapshot(self, case_id: u256, now: u256, deadline_passed: bool) -> str:
         count = int(self.case_agent_count.get(case_id, u256(0)))

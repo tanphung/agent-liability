@@ -78,6 +78,7 @@ export type TransactionPhase =
 export type TransactionRecord = {
   id: string;
   label: string;
+  contract?: HexAddress;
   hash?: HexAddress;
   phase: TransactionPhase;
   error?: string;
